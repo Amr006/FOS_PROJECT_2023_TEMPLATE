@@ -313,8 +313,15 @@ int strsplit(char *string, char *SPLIT_CHARS, char **argv, int * argc)
 /*2024*/
 char* str2lower(char *dst, const char *src)
 {
-	//TODO: [PROJECT'23.MS1 - #1] [1] PLAY WITH CODE! - str2lower
-	//Comment the following line before start coding...
-	panic("process_command is not implemented yet");
-	return NULL;
+	int i = 0;
+	while(src[i] != '\0'){
+
+		if( src[i] >= 'A' && src[i] <= 'Z'){
+			dst[i] = src[i] + ('a' - 'A');
+		}else{
+			dst[i] = src[i];
+		}
+		i++;
+	}
+	return dst;
 }
