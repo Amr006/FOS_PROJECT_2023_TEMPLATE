@@ -116,40 +116,50 @@ void *alloc_block_FF(uint32 size)
 {
 	//TODO: [PROJECT'23.MS1 - #6] [3] DYNAMIC ALLOCATOR - alloc_block_FF()
 //	panic("alloc_block_FF is not implemented yet");
+
+	if(size==0){
+		return NULL;
+	}
 	struct BlockMetaData *element ;
 	int i = 1 ;
-	int myBool = 0;
+	int done=0;
 
 	LIST_FOREACH(element , &MemoryData)
 	{
-		int sizeBlock = element->size - sizeOfMetaData() ;
-		cprintf("\n sizeBlock %d :\n and metat data : %d" , element->size , sizeOfMetaData());
-		if ( element->is_free == 1 && (size + sizeOfMetaData() )   == sizeBlock)
+		int sizeBlock = element->size + sizeOfMetaData() ;
+		//fit the block
+		if ( element->is_free == 1 && (size + sizeOfMetaData())   == sizeBlock)
 		{
-			myBool = 1 ;
-			element->is_free = 0 ;
-			return NULL;
-		}else if( element->is_free == 1 && (size + sizeOfMetaData() ) < sizeBlock)
+			done=1;
+			element->is_free = 0;
+			return element;
+		}else if( element->is_free == 1 && (size + sizeOfMetaData()) < sizeBlock)
 		{
-			myBool = 1 ;
-			element->is_free = 0 ;
-			struct BlockMetaData *metadata = (struct BlockMetaData *)LIST_LAST(&MemoryData);
+			done=1;
+			element->is_free = 0;
+			struct BlockMetaData *metadata = (struct BlockMetaData *)(element+1);
 			metadata->is_free=1;
 			metadata->prev_next_info.le_next=NULL;
 			metadata->prev_next_info.le_prev= element;
-			metadata->size= sizeBlock - size ;
-			element->prev_next_info.le_next = metadata;
-			element->size = size ;
-			return NULL;
+			metadata->size=element->size-size;
+			LIST_INSERT_HEAD(&MemoryData,metadata);
+			return (element+1);
 		}
 	}
-	if(myBool == 0)
-	{
+	if(!done){
+		int *ret=(int *)sbrk(size);
+		if(ret == (void*)-1){
+			return NULL;
+		}
 
 	}
-
 	return NULL;
+
 }
+
+
+
+
 //=========================================
 // [5] ALLOCATE BLOCK BY BEST FIT:
 //=========================================
