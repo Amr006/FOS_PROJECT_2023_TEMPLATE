@@ -103,7 +103,7 @@ void initialize_dynamic_allocator(uint32 daStart, uint32 initSizeOfAllocatedSpac
 
 	LIST_INIT(&MemoryData);
 	LIST_INSERT_HEAD(&MemoryData,metadata);
-
+	LIST_LAST(&MemoryData) = metadata;
 
 	//TODO: [PROJECT'23.MS1 - #5] [3] DYNAMIC ALLOCATOR - initialize_dynamic_allocator()
 	//panic("initialize_dynamic_allocator is not implemented yet");
@@ -116,7 +116,37 @@ void *alloc_block_FF(uint32 size)
 {
 	//TODO: [PROJECT'23.MS1 - #6] [3] DYNAMIC ALLOCATOR - alloc_block_FF()
 //	panic("alloc_block_FF is not implemented yet");
+	struct BlockMetaData *element ;
+	int i = 1 ;
+	int myBool = 0;
 
+	LIST_FOREACH(element , &MemoryData)
+	{
+		int sizeBlock = element->size - sizeOfMetaData() ;
+		cprintf("\n sizeBlock %d :\n and metat data : %d" , element->size , sizeOfMetaData());
+		if ( element->is_free == 1 && (size + sizeOfMetaData() )   == sizeBlock)
+		{
+			myBool = 1 ;
+			element->is_free = 0 ;
+			return NULL;
+		}else if( element->is_free == 1 && (size + sizeOfMetaData() ) < sizeBlock)
+		{
+			myBool = 1 ;
+			element->is_free = 0 ;
+			struct BlockMetaData *metadata = (struct BlockMetaData *)LIST_LAST(&MemoryData);
+			metadata->is_free=1;
+			metadata->prev_next_info.le_next=NULL;
+			metadata->prev_next_info.le_prev= element;
+			metadata->size= sizeBlock - size ;
+			element->prev_next_info.le_next = metadata;
+			element->size = size ;
+			return NULL;
+		}
+	}
+	if(myBool == 0)
+	{
+
+	}
 
 	return NULL;
 }
