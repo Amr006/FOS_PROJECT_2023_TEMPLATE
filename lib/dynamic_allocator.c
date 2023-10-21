@@ -116,7 +116,7 @@ void *alloc_block_FF(uint32 size)
 {
 	//TODO: [PROJECT'23.MS1 - #6] [3] DYNAMIC ALLOCATOR - alloc_block_FF()
 //	panic("alloc_block_FF is not implemented yet");
-
+	//cprintf("Invalid allocation strategy\n");
 	if(size==0){
 		return NULL;
 	}
@@ -126,28 +126,33 @@ void *alloc_block_FF(uint32 size)
 
 	LIST_FOREACH(element , &MemoryData)
 	{
-		int sizeBlock = element->size + sizeOfMetaData() ;
+		int sizeBlock = element->size - sizeOfMetaData() ;
 		//fit the block
-		if ( element->is_free == 1 && (size + sizeOfMetaData())   == sizeBlock)
+		if ( element->is_free == 1 && (size + sizeOfMetaData())  == sizeBlock)
 		{
 			done=1;
 			element->is_free = 0;
-			return element;
+			void *allocatedSpace = (void*)((char*)element + sizeOfMetaData());
+			return (allocatedSpace) ;
 		}else if( element->is_free == 1 && (size + sizeOfMetaData()) < sizeBlock)
 		{
 			done=1;
 			element->is_free = 0;
-			struct BlockMetaData *metadata = (struct BlockMetaData *)(element+1);
+			//cprintf("Invalid allocation strategy %d : \n" , ((void*)((char*)element + size + sizeOfMetaData())));
+			struct BlockMetaData *metadata = (struct BlockMetaData *)((void*)((char*)element + size + sizeOfMetaData()));
 			metadata->is_free=1;
 			metadata->prev_next_info.le_next=NULL;
 			metadata->prev_next_info.le_prev= element;
 			metadata->size=element->size-size;
 			LIST_INSERT_HEAD(&MemoryData,metadata);
-			return (element+1);
+			void *allocatedSpace = (void*)((char*)element + sizeOfMetaData());
+			return (allocatedSpace);
 		}
 	}
-	if(!done){
+	if(done == 0){
+		//cprintf("Invalid allocation strategy\n");
 		int *ret=(int *)sbrk(size);
+		return NULL;
 		if(ret == (void*)-1){
 			return NULL;
 		}
