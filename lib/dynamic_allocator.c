@@ -143,6 +143,7 @@ void *alloc_block_FF(uint32 size)
 			metadata->is_free=1;
 			metadata->prev_next_info.le_next=NULL;
 			metadata->prev_next_info.le_prev= element;
+			element->prev_next_info.le_next=metadata;
 			metadata->size=element->size-size;
 			LIST_INSERT_HEAD(&MemoryData,metadata);
 			void *allocatedSpace = (void*)((char*)element + sizeOfMetaData());
@@ -198,8 +199,47 @@ void *alloc_block_NF(uint32 size)
 //===================================================
 void free_block(void *va)
 {
+	if(va==NULL)
+		return;
 	//TODO: [PROJECT'23.MS1 - #7] [3] DYNAMIC ALLOCATOR - free_block()
-	panic("free_block is not implemented yet");
+	//panic("free_block is not implemented yet");
+	struct BlockMetaData *metadata=(struct BlockMetaData *)va;
+	struct BlockMetaData *currmetadata=metadata-sizeOfMetaData();
+
+	if(currmetadata->prev_next_info.le_next==NULL&&currmetadata->prev_next_info.le_prev!=NULL){
+			struct BlockMetaData *prevmetadata=currmetadata->prev_next_info.le_prev;
+			if(prevmetadata->is_free==0){
+				currmetadata->is_free=1;
+			}else{
+				prevmetadata->size+=currmetadata->size;
+				LIST_REMOVE(&MemoryData,currmetadata);
+			}
+	}else if(currmetadata->prev_next_info.le_next!=NULL&&currmetadata->prev_next_info.le_prev==NULL){
+		struct BlockMetaData *nextmetadata=currmetadata->prev_next_info.le_next;
+		if(nextmetadata->is_free==0){
+			currmetadata->is_free=1;
+		}else{
+			currmetadata->size+=nextmetadata->size;
+			LIST_REMOVE(&MemoryData,nextmetadata);
+		}
+	}else{
+		        struct BlockMetaData *prevmetadata=currmetadata->prev_next_info.le_prev;
+				struct BlockMetaData *nextmetadata=currmetadata->prev_next_info.le_next;
+				    if(prevmetadata->is_free==0&&nextmetadata->is_free==0){
+						currmetadata->is_free=1;
+					}else if(prevmetadata->is_free==1&&nextmetadata->is_free==0){
+						prevmetadata->size+=currmetadata->size;
+						LIST_REMOVE(&MemoryData,currmetadata);
+					}else if(prevmetadata->is_free==0&&nextmetadata->is_free==1){
+						currmetadata->size+=nextmetadata->size;
+						LIST_REMOVE(&MemoryData,nextmetadata);
+					}else{
+						prevmetadata->size+=(nextmetadata->size+currmetadata->size);
+						LIST_REMOVE(&MemoryData,nextmetadata);
+						LIST_REMOVE(&MemoryData,currmetadata);
+					}
+	}
+
 }
 
 //=========================================
