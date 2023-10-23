@@ -171,7 +171,7 @@ void *alloc_block_FF(uint32 size)
 void *alloc_block_BF(uint32 size)
 {
 	//TODO: [PROJECT'23.MS1 - BONUS] [3] DYNAMIC ALLOCATOR - alloc_block_BF()
-	panic("alloc_block_BF is not implemented yet");
+	//panic("alloc_block_BF is not implemented yet");
 	return NULL;
 }
 
@@ -180,7 +180,7 @@ void *alloc_block_BF(uint32 size)
 //=========================================
 void *alloc_block_WF(uint32 size)
 {
-	panic("alloc_block_WF is not implemented yet");
+	//panic("alloc_block_WF is not implemented yet");
 	return NULL;
 }
 

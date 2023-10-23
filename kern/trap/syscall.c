@@ -513,8 +513,13 @@ void* sys_sbrk(uint32 increment)
 /************************* SYSTEM CALLS HANDLER ***************************/
 /**************************************************************************/
 // Dispatches to the correct kernel function, passing the arguments.
-uint32 syscall(uint32 syscallno, uint32 a1, uint32 a2, uint32 a3, uint32 a4, uint32 a5)
+void *isnull()
 {
+	return (void*)NULL;
+}
+uint32 syscall(uint32 syscallno, uint32 a1, uint32 a2, uint32 a3, uint32 a4, uint32 a5)
+{uint32 thevirtualaddressoftheblock = a1;
+uint32 thesizeofblock=a2;
 	// Call the function corresponding to the 'syscallno' parameter.
 	// Return any appropriate return value.
 	switch(syscallno)
@@ -522,16 +527,33 @@ uint32 syscall(uint32 syscallno, uint32 a1, uint32 a2, uint32 a3, uint32 a4, uin
 	/*2023*/
 	//TODO: [PROJECT'23.MS1 - #4] [2] SYSTEM CALLS - Add suitable code here
 	case SYS_sbrk:
-		sys_sbrk(a1);
-		return 0;
+		return (uint32) (sys_sbrk(a1));
 		break;
 	case SYS_allocate_user_mem :
-		sys_allocate_user_mem(a1, a2);
-		return 0;
+
+		     if((void*)thevirtualaddressoftheblock==isnull())
+			   {
+				 sched_kill_env(curenv->env_id);
+			   }
+				else if((thevirtualaddressoftheblock < 0 || (thevirtualaddressoftheblock + thesizeofblock) >= USER_LIMIT))
+				{
+				sched_kill_env(curenv->env_id);
+				}
+		sys_allocate_user_mem((uint32)thesizeofblock,(uint32)thesizeofblock);
+
 		break;
 	case SYS_free_user_mem :
-		sys_free_user_mem(a1, a2);
-		return 0;
+
+		if((void *)thevirtualaddressoftheblock==isnull())
+			   {
+				 sched_kill_env(curenv->env_id);
+				 }
+				else if((thevirtualaddressoftheblock < 0 || (thevirtualaddressoftheblock + thesizeofblock) >= USER_LIMIT))
+				{
+				sched_kill_env(curenv->env_id);
+				}
+		 sys_free_user_mem((uint32)thesizeofblock,(uint32)thesizeofblock);
+
 		break;
 	//=====================================================================
 	case SYS_cputs:

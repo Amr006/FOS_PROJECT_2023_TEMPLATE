@@ -2,6 +2,7 @@
 
 #include <inc/syscall.h>
 #include <inc/lib.h>
+//#include <inc/environment_definitions.h>
 
 static inline uint32
 syscall(int num, uint32 a1, uint32 a2, uint32 a3, uint32 a4, uint32 a5)
@@ -336,7 +337,8 @@ void sys_allocate_chunk(uint32 virtual_address, uint32 size, uint32 perms)
 //TODO: [PROJECT'23.MS1 - #3] [2] SYSTEM CALLS - Implement these system calls
 void* sys_sbrk(int increment)
 {
-	return (void *)syscall(SYS_sbrk, (uint32)increment, 0, 0, 0, 0);
+	syscall(SYS_sbrk, increment, 0, 0, 0, 0);
+	return(void*) -1;
 	//panic("not implemented yet");
 }
 
@@ -344,11 +346,14 @@ void sys_free_user_mem(uint32 virtual_address, uint32 size)
 {
 
 	 syscall(SYS_free_user_mem, virtual_address, size, 0, 0, 0);
+
 	 //panic("not implemented yet");
 }
 
 void sys_allocate_user_mem(uint32 virtual_address, uint32 size)
 {
 	syscall(SYS_allocate_user_mem, virtual_address, size, 0, 0, 0);
+
 	//panic("not implemented yet");
+
 }
