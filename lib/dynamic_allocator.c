@@ -115,7 +115,7 @@ void initialize_dynamic_allocator(uint32 daStart, uint32 initSizeOfAllocatedSpac
 void *alloc_block_FF(uint32 size)
 {
 	//TODO: [PROJECT'23.MS1 - #6] [3] DYNAMIC ALLOCATOR - alloc_block_FF()
-
+    //test
 	if(size==0){
 		return NULL;
 	}
