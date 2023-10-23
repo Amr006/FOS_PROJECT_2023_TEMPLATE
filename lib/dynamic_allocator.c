@@ -115,48 +115,46 @@ void initialize_dynamic_allocator(uint32 daStart, uint32 initSizeOfAllocatedSpac
 void *alloc_block_FF(uint32 size)
 {
 	//TODO: [PROJECT'23.MS1 - #6] [3] DYNAMIC ALLOCATOR - alloc_block_FF()
-//	panic("alloc_block_FF is not implemented yet");
-	//cprintf("Invalid allocation strategy\n");
+    //test
 	if(size==0){
 		return NULL;
 	}
 	struct BlockMetaData *element ;
-	int i = 1 ;
-	int done=0;
-
+	int allocated=0;
 	LIST_FOREACH(element , &MemoryData)
 	{
-		int sizeBlock = element->size - sizeOfMetaData() ;
-		//fit the block
-		if ( element->is_free == 1 && (size + sizeOfMetaData())  == sizeBlock)
+		uint32 sizeBlock = element->size - sizeOfMetaData() ;
+		uint32 allsize=size+sizeOfMetaData();
+		if(element->is_free == 1 && (size)  == sizeBlock){
+			allocated=1;
+			element->is_free=0;
+			char * returnedAdress=(char *)element+sizeOfMetaData();
+		    return returnedAdress;
+		}
+		else if( element->is_free == 1 && (size) < sizeBlock)
 		{
-			done=1;
+			allocated=1;
 			element->is_free = 0;
-			void *allocatedSpace = (void*)((char*)element + sizeOfMetaData());
-			return (allocatedSpace) ;
-		}else if( element->is_free == 1 && (size + sizeOfMetaData()) < sizeBlock)
-		{
-			done=1;
-			element->is_free = 0;
-			//cprintf("Invalid allocation strategy %d : \n" , ((void*)((char*)element + size + sizeOfMetaData())));
-			struct BlockMetaData *metadata = (struct BlockMetaData *)((void*)((char*)element + size + sizeOfMetaData()));
-			metadata->is_free=1;
-			metadata->prev_next_info.le_next=NULL;
-			metadata->prev_next_info.le_prev= element;
-			metadata->size=element->size-size;
-			LIST_INSERT_HEAD(&MemoryData,metadata);
-			void *allocatedSpace = (void*)((char*)element + sizeOfMetaData());
-			return (allocatedSpace);
+			char* address=(char*)element+size+sizeOfMetaData();
+			struct BlockMetaData *metadata = (struct BlockMetaData *)address;
+			if(element->prev_next_info.le_next!=NULL){
+				metadata->prev_next_info.le_next=element->prev_next_info.le_next;
+				element->prev_next_info.le_next->prev_next_info.le_prev=metadata;
+			}else{
+				metadata->prev_next_info.le_next=NULL;
+			}
+			element->prev_next_info.le_next=metadata;
+			metadata->prev_next_info.le_prev=element;
+			metadata->size=element->size-(size+sizeOfMetaData());
+		    element->size=size+sizeOfMetaData();
+		    metadata->is_free=1;
+		    LIST_INSERT_TAIL(&MemoryData,metadata);
+		    char * returnedAdress=(char *)element+sizeOfMetaData();
+		    return returnedAdress;
 		}
 	}
-	if(done == 0){
-		//cprintf("Invalid allocation strategy\n");
-		int *ret=(int *)sbrk(size);
+	if(allocated == 0){
 		return NULL;
-		if(ret == (void*)-1){
-			return NULL;
-		}
-
 	}
 	return NULL;
 
@@ -198,8 +196,80 @@ void *alloc_block_NF(uint32 size)
 //===================================================
 void free_block(void *va)
 {
+	if(va==NULL)
+		return;
 	//TODO: [PROJECT'23.MS1 - #7] [3] DYNAMIC ALLOCATOR - free_block()
-	panic("free_block is not implemented yet");
+	//panic("free_block is not implemented yet");
+
+	struct BlockMetaData *currmetadata=	((struct BlockMetaData *)va - 1);
+	if(currmetadata->prev_next_info.le_next==NULL&&currmetadata->prev_next_info.le_prev!=NULL){
+			struct BlockMetaData *prevmetadata=currmetadata->prev_next_info.le_prev;
+			if(prevmetadata->is_free==0){
+				currmetadata->is_free=1;
+			}else{
+				prevmetadata->size+=currmetadata->size;
+				prevmetadata->prev_next_info.le_next=NULL;
+				currmetadata->size=0;
+				currmetadata->is_free= 0;
+				currmetadata->prev_next_info.le_prev=NULL;
+				LIST_REMOVE(&MemoryData,currmetadata);
+			}
+	}else if(currmetadata->prev_next_info.le_next!=NULL&&currmetadata->prev_next_info.le_prev==NULL){
+		struct BlockMetaData *nextmetadata=currmetadata->prev_next_info.le_next;
+		if(nextmetadata->is_free==0){
+			currmetadata->is_free=1;
+		}else{
+			currmetadata->size+=nextmetadata->size;
+			currmetadata->is_free=1;
+			nextmetadata->size=0;
+			nextmetadata->is_free=0;
+			if(nextmetadata->prev_next_info.le_next!=NULL){
+				currmetadata->prev_next_info.le_next=nextmetadata->prev_next_info.le_next;
+				nextmetadata->prev_next_info.le_next->prev_next_info.le_prev=currmetadata;
+			}else{
+				currmetadata->prev_next_info.le_next=NULL;
+			}
+			nextmetadata->prev_next_info.le_next=NULL;
+			nextmetadata->prev_next_info.le_prev=NULL;
+			LIST_REMOVE(&MemoryData,nextmetadata);
+		}
+	}else if(currmetadata->prev_next_info.le_next!=NULL&&currmetadata->prev_next_info.le_prev!=NULL){
+		        struct BlockMetaData *prevmetadata=currmetadata->prev_next_info.le_prev;
+				struct BlockMetaData *nextmetadata=currmetadata->prev_next_info.le_next;
+				    if(prevmetadata->is_free==0&&nextmetadata->is_free==0){
+						currmetadata->is_free=1;
+					}else if(prevmetadata->is_free==1&&nextmetadata->is_free==0){
+						prevmetadata->size+=currmetadata->size;
+						currmetadata->size= 0 ;
+						currmetadata->is_free= 0;
+						prevmetadata->prev_next_info.le_next=nextmetadata;
+						nextmetadata->prev_next_info.le_prev=prevmetadata;
+						LIST_REMOVE(&MemoryData,currmetadata);
+					}else if(prevmetadata->is_free==0&&nextmetadata->is_free==1){
+						currmetadata->size+=nextmetadata->size;
+						currmetadata->prev_next_info.le_next=nextmetadata->prev_next_info.le_next;
+						nextmetadata->prev_next_info.le_next->prev_next_info.le_prev=currmetadata;
+						currmetadata->is_free=1;
+						nextmetadata->size= 0;
+						nextmetadata->is_free= 0;
+						LIST_REMOVE(&MemoryData,nextmetadata);
+					}else if(prevmetadata->is_free==1&&nextmetadata->is_free==1){
+						prevmetadata->size+=(nextmetadata->size+currmetadata->size);
+						prevmetadata->prev_next_info.le_next=nextmetadata->prev_next_info.le_next;
+						nextmetadata->prev_next_info.le_next->prev_next_info.le_prev=prevmetadata;
+						currmetadata->prev_next_info.le_next=NULL;
+						currmetadata->prev_next_info.le_prev=NULL;
+						nextmetadata->prev_next_info.le_next=NULL;
+						nextmetadata->prev_next_info.le_prev=NULL;
+						nextmetadata->size= 0 ;
+						nextmetadata->is_free= 0;
+						currmetadata->size= 0 ;
+						currmetadata->is_free= 0;
+						LIST_REMOVE(&MemoryData,nextmetadata);
+						LIST_REMOVE(&MemoryData,currmetadata);
+					}
+	}
+
 }
 
 //=========================================
