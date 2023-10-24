@@ -116,47 +116,50 @@ void *alloc_block_FF(uint32 size)
 {
 	//TODO: [PROJECT'23.MS1 - #6] [3] DYNAMIC ALLOCATOR - alloc_block_FF()
     //test
+
 	if(size==0){
 		return NULL;
 	}
-	struct BlockMetaData *element ;
+	struct BlockMetaData *element;
+	uint32 reqsize=size+sizeOfMetaData();
 	int allocated=0;
 	LIST_FOREACH(element , &MemoryData)
 	{
-		uint32 sizeBlock = element->size - sizeOfMetaData() ;
-		uint32 allsize=size+sizeOfMetaData();
-		if(element->is_free == 1 && (size)  == sizeBlock){
+
+		uint32 sizeBlock = element->size;
+		if(element->is_free == 1 && (reqsize)  == sizeBlock){
 			allocated=1;
 			element->is_free=0;
 			char * returnedAdress=(char *)element+sizeOfMetaData();
 		    return returnedAdress;
 		}
-		else if( element->is_free == 1 && (size) < sizeBlock)
+		else if( element->is_free == 1 && (reqsize) < sizeBlock)
 		{
 			allocated=1;
 			element->is_free = 0;
-			char* address=(char*)element+size+sizeOfMetaData();
+			char* address=(char*)element+reqsize;
 			struct BlockMetaData *metadata = (struct BlockMetaData *)address;
-			if(element->prev_next_info.le_next!=NULL){
-				metadata->prev_next_info.le_next=element->prev_next_info.le_next;
-				element->prev_next_info.le_next->prev_next_info.le_prev=metadata;
-			}else{
-				metadata->prev_next_info.le_next=NULL;
-			}
-			element->prev_next_info.le_next=metadata;
-			metadata->prev_next_info.le_prev=element;
-			metadata->size=element->size-(size+sizeOfMetaData());
-		    element->size=size+sizeOfMetaData();
+			metadata->size=element->size-reqsize;
+		    element->size=reqsize;
 		    metadata->is_free=1;
-		    LIST_INSERT_TAIL(&MemoryData,metadata);
+		    LIST_INSERT_AFTER(&MemoryData,element,metadata);
 		    char * returnedAdress=(char *)element+sizeOfMetaData();
 		    return returnedAdress;
 		}
 	}
+
 	if(allocated == 0){
-		return NULL;
+		void* res = sbrk(reqsize);
+		if(res== (void *)-1){
+			return NULL;
+		}
+		else{
+			return(struct BlockMetaData*)(res + sizeOfMetaData());
+		}
 	}
+
 	return NULL;
+
 
 }
 
@@ -212,7 +215,6 @@ void free_block(void *va)
 				currmetadata->size=0;
 				currmetadata->is_free= 0;
 				currmetadata->prev_next_info.le_prev=NULL;
-				LIST_REMOVE(&MemoryData,currmetadata);
 			}
 	}else if(currmetadata->prev_next_info.le_next!=NULL&&currmetadata->prev_next_info.le_prev==NULL){
 		struct BlockMetaData *nextmetadata=currmetadata->prev_next_info.le_next;
@@ -231,7 +233,6 @@ void free_block(void *va)
 			}
 			nextmetadata->prev_next_info.le_next=NULL;
 			nextmetadata->prev_next_info.le_prev=NULL;
-			LIST_REMOVE(&MemoryData,nextmetadata);
 		}
 	}else if(currmetadata->prev_next_info.le_next!=NULL&&currmetadata->prev_next_info.le_prev!=NULL){
 		        struct BlockMetaData *prevmetadata=currmetadata->prev_next_info.le_prev;
@@ -244,7 +245,6 @@ void free_block(void *va)
 						currmetadata->is_free= 0;
 						prevmetadata->prev_next_info.le_next=nextmetadata;
 						nextmetadata->prev_next_info.le_prev=prevmetadata;
-						LIST_REMOVE(&MemoryData,currmetadata);
 					}else if(prevmetadata->is_free==0&&nextmetadata->is_free==1){
 						currmetadata->size+=nextmetadata->size;
 						currmetadata->prev_next_info.le_next=nextmetadata->prev_next_info.le_next;
@@ -252,7 +252,6 @@ void free_block(void *va)
 						currmetadata->is_free=1;
 						nextmetadata->size= 0;
 						nextmetadata->is_free= 0;
-						LIST_REMOVE(&MemoryData,nextmetadata);
 					}else if(prevmetadata->is_free==1&&nextmetadata->is_free==1){
 						prevmetadata->size+=(nextmetadata->size+currmetadata->size);
 						prevmetadata->prev_next_info.le_next=nextmetadata->prev_next_info.le_next;
@@ -265,8 +264,6 @@ void free_block(void *va)
 						nextmetadata->is_free= 0;
 						currmetadata->size= 0 ;
 						currmetadata->is_free= 0;
-						LIST_REMOVE(&MemoryData,nextmetadata);
-						LIST_REMOVE(&MemoryData,currmetadata);
 					}
 	}
 
