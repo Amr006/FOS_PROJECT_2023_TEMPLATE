@@ -171,6 +171,56 @@ void *alloc_block_FF(uint32 size)
 //=========================================
 void *alloc_block_BF(uint32 size)
 {
+	if(size==0){
+		return NULL;
+	}
+	struct BlockMetaData *element;
+	uint32 reqsize=size+sizeOfMetaData();
+	int allocated=0;
+	struct BlockMetaData* min = LIST_FIRST(&MemoryData);
+	LIST_FOREACH(element , &MemoryData) {
+	if((element->size <= (min->size)) && (element->size>reqsize)){
+		min->size=element->size;
+		min->prev_next_info=element->prev_next_info;
+		min->is_free=element->is_free;
+		min=element;
+      }
+	}
+	LIST_FOREACH(element , &MemoryData)
+	{
+
+		uint32 sizeBlock = element->size;
+		if(element->is_free == 1 && (reqsize)  == sizeBlock){
+			allocated=1;
+			element->is_free=0;
+			char * returnedAdress=(char *)element+sizeOfMetaData();
+		    return returnedAdress;
+		}
+		else if(element->is_free == 1 && (reqsize) < sizeBlock){
+
+	            allocated=1;
+	            min->is_free = 0;
+	            char* address=(char*)min+reqsize;
+	            struct BlockMetaData *metadata = (struct BlockMetaData *)address;
+	            metadata->size=min->size-reqsize;
+	            min->size=reqsize;
+	            metadata->is_free=1;
+	            LIST_INSERT_AFTER(&MemoryData,min,metadata);
+	            char * returnedAdress=(char *)min+sizeOfMetaData();
+	            return returnedAdress;
+
+		}
+	}
+	if(allocated == 0){
+				void* res = sbrk(reqsize);
+				if(res== (void *)-1){
+					return NULL;
+				}
+				else{
+					return(struct BlockMetaData*)(res + sizeOfMetaData());
+				}
+		}
+
 	//TODO: [PROJECT'23.MS1 - BONUS] [3] DYNAMIC ALLOCATOR - alloc_block_BF()
 	//panic("alloc_block_BF is not implemented yet");
 	return NULL;
@@ -190,6 +240,12 @@ void *alloc_block_WF(uint32 size)
 //=========================================
 void *alloc_block_NF(uint32 size)
 {
+	if(size==0){
+		return NULL;
+	}
+	struct BlockMetaData *element;
+	uint32 reqsize=size+sizeOfMetaData();
+	int allocated=0;
 	panic("alloc_block_NF is not implemented yet");
 	return NULL;
 }
