@@ -264,17 +264,20 @@ void free_block(void *va)
 			struct BlockMetaData *prevmetadata=currmetadata->prev_next_info.le_prev;
 			if(prevmetadata->is_free==0){
 				currmetadata->is_free=1;
+				//cprintf("test free 1 ");
 			}else{
 				prevmetadata->size+=currmetadata->size;
 				prevmetadata->prev_next_info.le_next=NULL;
 				currmetadata->size=0;
 				currmetadata->is_free= 0;
 				currmetadata->prev_next_info.le_prev=NULL;
+				//cprintf("test free 2 ");
 			}
 	}else if(currmetadata->prev_next_info.le_next!=NULL&&currmetadata->prev_next_info.le_prev==NULL){
 		struct BlockMetaData *nextmetadata=currmetadata->prev_next_info.le_next;
 		if(nextmetadata->is_free==0){
 			currmetadata->is_free=1;
+			//cprintf("test free 3");
 		}else{
 			currmetadata->size+=nextmetadata->size;
 			currmetadata->is_free=1;
@@ -283,23 +286,28 @@ void free_block(void *va)
 			if(nextmetadata->prev_next_info.le_next!=NULL){
 				currmetadata->prev_next_info.le_next=nextmetadata->prev_next_info.le_next;
 				nextmetadata->prev_next_info.le_next->prev_next_info.le_prev=currmetadata;
+				//cprintf("test free 4");
 			}else{
 				currmetadata->prev_next_info.le_next=NULL;
+				//cprintf("test free 5");
 			}
 			nextmetadata->prev_next_info.le_next=NULL;
 			nextmetadata->prev_next_info.le_prev=NULL;
+			//cprintf("test free 6");
 		}
 	}else if(currmetadata->prev_next_info.le_next!=NULL&&currmetadata->prev_next_info.le_prev!=NULL){
 		        struct BlockMetaData *prevmetadata=currmetadata->prev_next_info.le_prev;
 				struct BlockMetaData *nextmetadata=currmetadata->prev_next_info.le_next;
 				    if(prevmetadata->is_free==0&&nextmetadata->is_free==0){
 						currmetadata->is_free=1;
+						//cprintf("test free 7");
 					}else if(prevmetadata->is_free==1&&nextmetadata->is_free==0){
 						prevmetadata->size+=currmetadata->size;
 						currmetadata->size= 0 ;
 						currmetadata->is_free= 0;
 						prevmetadata->prev_next_info.le_next=nextmetadata;
 						nextmetadata->prev_next_info.le_prev=prevmetadata;
+						//cprintf("test free 8");
 					}else if(prevmetadata->is_free==0&&nextmetadata->is_free==1){
 						currmetadata->size+=nextmetadata->size;
 						currmetadata->prev_next_info.le_next=nextmetadata->prev_next_info.le_next;
@@ -307,6 +315,7 @@ void free_block(void *va)
 						currmetadata->is_free=1;
 						nextmetadata->size= 0;
 						nextmetadata->is_free= 0;
+						//cprintf("test free 9");
 					}else if(prevmetadata->is_free==1&&nextmetadata->is_free==1){
 						prevmetadata->size+=(nextmetadata->size+currmetadata->size);
 						prevmetadata->prev_next_info.le_next=nextmetadata->prev_next_info.le_next;
@@ -319,6 +328,7 @@ void free_block(void *va)
 						nextmetadata->is_free= 0;
 						currmetadata->size= 0 ;
 						currmetadata->is_free= 0;
+						//cprintf("test free 10");
 					}
 	}
 
@@ -335,14 +345,14 @@ void *realloc_block_FF(void* va, uint32 new_size){
 		//(va, 0)
 		if(new_size == 0)
 		{
-			cprintf("free");
+			//cprintf("free\n");
 			free_block(va);
 			return NULL ;
 		}
 
-		if(currMetaData->size > new_size)
+		if(currMetaData->size > new_size + sizeOfMetaData())
 		{
-			cprintf("currMetaData->size < new_size");
+			//cprintf("currMetaData->size < new_size\n");
 			uint32 reqsize=new_size+sizeOfMetaData();
 			currMetaData->is_free = 0;
 			char* address=(char*)currMetaData+reqsize;
@@ -354,9 +364,9 @@ void *realloc_block_FF(void* va, uint32 new_size){
 			char * returnedAdress=(char *)currMetaData+sizeOfMetaData();
 			return returnedAdress;
 		}
-		if(currMetaData->size == new_size)
+		if(currMetaData->size == new_size + sizeOfMetaData())
 		{
-			cprintf("currMetaData->size == new_size");
+			//cprintf("currMetaData->size == new_size + sizeOfMetaData() \n");
 			currMetaData->is_free = 0;
 			char * returnedAdress=(char *)currMetaData+sizeOfMetaData();
 			return returnedAdress;
@@ -364,24 +374,36 @@ void *realloc_block_FF(void* va, uint32 new_size){
 
 		if(currMetaData->prev_next_info.le_next != NULL)
 		{
-			cprintf("currMetaData->prev_next_info.le_next != NULL");
+			//cprintf("currMetaData->prev_next_info.le_next != NULL \n");
 			struct BlockMetaData *nextMetadata = currMetaData->prev_next_info.le_next;
-			if(nextMetadata->is_free == 1 && nextMetadata->size + currMetaData->size >= new_size  )
+			if(nextMetadata->is_free == 1 && nextMetadata->size + currMetaData->size >= new_size + sizeOfMetaData() )
 			{
-				cprintf("nextMetadata->is_free == 1 && nextMetadata->size + currMetaData->size >= new_size");
+				//cprintf("nextMetadata->is_free == 1 && nextMetadata->size + currMetaData->size >= new_size \n");
 				nextMetadata->size = nextMetadata->size + currMetaData->size - new_size - sizeOfMetaData();
 				currMetaData->size = new_size + sizeOfMetaData() ;
 				currMetaData->is_free = 0 ;
-				if(nextMetadata->size <= sizeOfMetaData())
-				{
-					nextMetadata->is_free = 0 ;
-				}
+				char* address=(char*)currMetaData+new_size+sizeOfMetaData();
+				struct BlockMetaData *metadata = (struct BlockMetaData *)address;
+				metadata->size= nextMetadata->size + currMetaData->size - new_size - sizeOfMetaData();
+				metadata->is_free=1;
+				LIST_INSERT_AFTER(&MemoryData,currMetaData,metadata);
+
+				free_block(nextMetadata + 1);
+
+
+
+
 				char * returnedAdress=(char *)currMetaData+sizeOfMetaData();
 				return returnedAdress;
+			}else
+			{
+				currMetaData->is_free = 1 ;
+				return alloc_block_FF(new_size);
 			}
 		}else
 		{
-			cprintf("NOT nextMetadata->is_free == 1 && nextMetadata->size + currMetaData->size >= new_size");
+			//cprintf("NOT nextMetadata->is_free == 1 && nextMetadata->size + currMetaData->size >= new_size \n");
+			currMetaData->is_free = 1 ;
 			return alloc_block_FF(new_size);
 		}
 
@@ -391,10 +413,10 @@ void *realloc_block_FF(void* va, uint32 new_size){
 
 	}else if (new_size != 0)	//(NULL, n)
 	{
-		cprintf("new_size != 0");
+		//cprintf("new_size != 0 \n");
 		return alloc_block_FF(new_size);
 	}else{	//(NULL, 0)
-		cprintf("(NULL, 0)");
+		//cprintf("(NULL, 0) \n");
 		return NULL ;
 	}
 //	panic("realloc_block_FF is not implemented yet");
