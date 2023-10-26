@@ -170,55 +170,53 @@ void *alloc_block_FF(uint32 size)
 //=========================================
 void *alloc_block_BF(uint32 size)
 {
-	if(size==0){
-		return NULL;
-	}
-	struct BlockMetaData *element;
-	uint32 reqsize=size+sizeOfMetaData();
-	int allocated=0;
-	struct BlockMetaData* min = LIST_FIRST(&MemoryData);
-	LIST_FOREACH(element , &MemoryData) {
-	if((element->size <= (min->size)) && (element->size>reqsize)){
-		min->size=element->size;
-		min->prev_next_info=element->prev_next_info;
-		min->is_free=element->is_free;
-		min=element;
-      }
-	}
-	LIST_FOREACH(element , &MemoryData)
-	{
+	    if (size == 0) {
+	        return NULL;
+	    }
 
-		uint32 sizeBlock = element->size;
-		if(element->is_free == 1 && (reqsize)  == sizeBlock){
-			allocated=1;
-			element->is_free=0;
-			char * returnedAdress=(char *)element+sizeOfMetaData();
-		    return returnedAdress;
-		}
-		else if(element->is_free == 1 && (reqsize) < sizeBlock){
 
-	            allocated=1;
-	            min->is_free = 0;
-	            char* address=(char*)min+reqsize;
+	    uint32 reqSize = size + sizeOfMetaData();
+
+	    struct BlockMetaData *element;
+	    struct BlockMetaData *bestFit = NULL;
+
+	    LIST_FOREACH(element, &MemoryData) {
+	        if (element->is_free && element->size >= reqSize) {
+	            if (bestFit == NULL || element->size < bestFit->size) {
+	                bestFit = element;
+	            }
+	        }
+	    }
+
+	    if (bestFit != NULL) {
+	        bestFit->is_free = 0;
+	        uint32 blockSize = bestFit->size;
+
+
+	        if (blockSize - reqSize > sizeOfMetaData()) {
+	            char *address = (char *)bestFit + reqSize;
 	            struct BlockMetaData *metadata = (struct BlockMetaData *)address;
-	            metadata->size=min->size-reqsize;
-	            min->size=reqsize;
-	            metadata->is_free=1;
-	            LIST_INSERT_AFTER(&MemoryData,min,metadata);
-	            char * returnedAdress=(char *)min+sizeOfMetaData();
-	            return returnedAdress;
+	            metadata->size = blockSize - reqSize;
+	            metadata->is_free = 1;
+	            bestFit->size = reqSize;
+	            LIST_INSERT_AFTER(&MemoryData, bestFit, metadata);
+	        }
 
-		}
-	}
-	if(allocated == 0){
-				void* res = sbrk(reqsize);
-				if(res== (void *)-1){
-					return NULL;
-				}
-				else{
-					return(struct BlockMetaData*)(res + sizeOfMetaData());
-				}
-		}
+	        return (void *)((char *)bestFit + sizeOfMetaData());
+	    } else {
+
+	        void *res = sbrk(reqSize);
+	        if (res == (void *)-1) {
+	            return NULL;
+	        } else {
+	            struct BlockMetaData *metadata = (struct BlockMetaData *)res;
+	            metadata->size = reqSize;
+	            metadata->is_free = 0;
+	            LIST_INSERT_HEAD(&MemoryData, metadata);
+	            return (void *)((char *)metadata + sizeOfMetaData());
+	        }
+	    }
+
 
 	//TODO: [PROJECT'23.MS1 - BONUS] [3] DYNAMIC ALLOCATOR - alloc_block_BF()
 	//panic("alloc_block_BF is not implemented yet");
