@@ -539,10 +539,10 @@ uint32 thesizeofblock=a2;
 				{
 				sched_kill_env(curenv->env_id);
 				}
-		sys_allocate_user_mem((uint32)thesizeofblock,(uint32)thesizeofblock);
+		sys_allocate_user_mem((uint32)thevirtualaddressoftheblock,(uint32)thesizeofblock);
 
 		break;
-	case SYS_free_user_mem :
+		case SYS_free_user_mem :
 
 		if((void *)thevirtualaddressoftheblock==isnull())
 			   {
@@ -552,7 +552,7 @@ uint32 thesizeofblock=a2;
 				{
 				sched_kill_env(curenv->env_id);
 				}
-		 sys_free_user_mem((uint32)thesizeofblock,(uint32)thesizeofblock);
+		 sys_free_user_mem((uint32)thevirtualaddressoftheblock,(uint32)thesizeofblock);
 
 		break;
 	//=====================================================================

@@ -337,19 +337,24 @@ void *realloc_block_FF(void* va, uint32 new_size){
 				if(currMetadata->prev_next_info.le_next != NULL){
 					if(currMetadata->prev_next_info.le_next->is_free == 1){
 												nextMetadata->is_free == 0;
+												cprintf("curr metadata before: %d\n", currMetadata->size);
 												currMetadata->size += nextMetadata->size;
+												cprintf("curr metadata after: %d\n", currMetadata->size);
 												currMetadata->is_free = 0;
 												currMetadata->prev_next_info.le_next=nextMetadata->prev_next_info.le_next;
 												nextMetadata->prev_next_info.le_prev = currMetadata->prev_next_info.le_prev;
 												return va;
 
 									}else{
+										cprintf("alo1");
 									return alloc_block_FF(new_size);
 								}
 				}else{
+					cprintf("alo2");
 					return alloc_block_FF(new_size);
 				}
 			}else if(new_size < currMetadata->size){
+					cprintf("size < currMeta");
 					char* address=(char*)currMetadata+new_size;
 					struct BlockMetaData *metadata = (struct BlockMetaData *)address;
 					metadata->size=currMetadata->size-new_size;
@@ -357,13 +362,16 @@ void *realloc_block_FF(void* va, uint32 new_size){
 					metadata->is_free=1;
 					return va;
 			}else if(new_size == 0){
+				cprintf("alo3");
 				free_block(va);
 				return NULL;
 		}
 	}else if(va == NULL){
+		cprintf("alo4");
 		if(new_size == 0){
 			return NULL;
 		}else{
+			cprintf("alo5");
 			return alloc_block_FF(new_size);
 		}
 	}
