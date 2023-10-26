@@ -170,55 +170,53 @@ void *alloc_block_FF(uint32 size)
 //=========================================
 void *alloc_block_BF(uint32 size)
 {
-	if(size==0){
-		return NULL;
-	}
-	struct BlockMetaData *element;
-	uint32 reqsize=size+sizeOfMetaData();
-	int allocated=0;
-	struct BlockMetaData* min = LIST_FIRST(&MemoryData);
-	LIST_FOREACH(element , &MemoryData) {
-	if((element->size <= (min->size)) && (element->size>reqsize)){
-		min->size=element->size;
-		min->prev_next_info=element->prev_next_info;
-		min->is_free=element->is_free;
-		min=element;
-      }
-	}
-	LIST_FOREACH(element , &MemoryData)
-	{
+	    if (size == 0) {
+	        return NULL;
+	    }
 
-		uint32 sizeBlock = element->size;
-		if(element->is_free == 1 && (reqsize)  == sizeBlock){
-			allocated=1;
-			element->is_free=0;
-			char * returnedAdress=(char *)element+sizeOfMetaData();
-		    return returnedAdress;
-		}
-		else if(element->is_free == 1 && (reqsize) < sizeBlock){
 
-	            allocated=1;
-	            min->is_free = 0;
-	            char* address=(char*)min+reqsize;
+	    uint32 reqSize = size + sizeOfMetaData();
+
+	    struct BlockMetaData *element;
+	    struct BlockMetaData *bestFit = NULL;
+
+	    LIST_FOREACH(element, &MemoryData) {
+	        if (element->is_free && element->size >= reqSize) {
+	            if (bestFit == NULL || element->size < bestFit->size) {
+	                bestFit = element;
+	            }
+	        }
+	    }
+
+	    if (bestFit != NULL) {
+	        bestFit->is_free = 0;
+	        uint32 blockSize = bestFit->size;
+
+
+	        if (blockSize - reqSize > sizeOfMetaData()) {
+	            char *address = (char *)bestFit + reqSize;
 	            struct BlockMetaData *metadata = (struct BlockMetaData *)address;
-	            metadata->size=min->size-reqsize;
-	            min->size=reqsize;
-	            metadata->is_free=1;
-	            LIST_INSERT_AFTER(&MemoryData,min,metadata);
-	            char * returnedAdress=(char *)min+sizeOfMetaData();
-	            return returnedAdress;
+	            metadata->size = blockSize - reqSize;
+	            metadata->is_free = 1;
+	            bestFit->size = reqSize;
+	            LIST_INSERT_AFTER(&MemoryData, bestFit, metadata);
+	        }
 
-		}
-	}
-	if(allocated == 0){
-				void* res = sbrk(reqsize);
-				if(res== (void *)-1){
-					return NULL;
-				}
-				else{
-					return(struct BlockMetaData*)(res + sizeOfMetaData());
-				}
-		}
+	        return (void *)((char *)bestFit + sizeOfMetaData());
+	    } else {
+
+	        void *res = sbrk(reqSize);
+	        if (res == (void *)-1) {
+	            return NULL;
+	        } else {
+	            struct BlockMetaData *metadata = (struct BlockMetaData *)res;
+	            metadata->size = reqSize;
+	            metadata->is_free = 0;
+	            LIST_INSERT_HEAD(&MemoryData, metadata);
+	            return (void *)((char *)metadata + sizeOfMetaData());
+	        }
+	    }
+
 
 	//TODO: [PROJECT'23.MS1 - BONUS] [3] DYNAMIC ALLOCATOR - alloc_block_BF()
 	//panic("alloc_block_BF is not implemented yet");
@@ -264,17 +262,20 @@ void free_block(void *va)
 			struct BlockMetaData *prevmetadata=currmetadata->prev_next_info.le_prev;
 			if(prevmetadata->is_free==0){
 				currmetadata->is_free=1;
+				//cprintf("test free 1 ");
 			}else{
 				prevmetadata->size+=currmetadata->size;
 				prevmetadata->prev_next_info.le_next=NULL;
 				currmetadata->size=0;
 				currmetadata->is_free= 0;
 				currmetadata->prev_next_info.le_prev=NULL;
+				//cprintf("test free 2 ");
 			}
 	}else if(currmetadata->prev_next_info.le_next!=NULL&&currmetadata->prev_next_info.le_prev==NULL){
 		struct BlockMetaData *nextmetadata=currmetadata->prev_next_info.le_next;
 		if(nextmetadata->is_free==0){
 			currmetadata->is_free=1;
+			//cprintf("test free 3");
 		}else{
 			currmetadata->size+=nextmetadata->size;
 			currmetadata->is_free=1;
@@ -283,23 +284,28 @@ void free_block(void *va)
 			if(nextmetadata->prev_next_info.le_next!=NULL){
 				currmetadata->prev_next_info.le_next=nextmetadata->prev_next_info.le_next;
 				nextmetadata->prev_next_info.le_next->prev_next_info.le_prev=currmetadata;
+				//cprintf("test free 4");
 			}else{
 				currmetadata->prev_next_info.le_next=NULL;
+				//cprintf("test free 5");
 			}
 			nextmetadata->prev_next_info.le_next=NULL;
 			nextmetadata->prev_next_info.le_prev=NULL;
+			//cprintf("test free 6");
 		}
 	}else if(currmetadata->prev_next_info.le_next!=NULL&&currmetadata->prev_next_info.le_prev!=NULL){
 		        struct BlockMetaData *prevmetadata=currmetadata->prev_next_info.le_prev;
 				struct BlockMetaData *nextmetadata=currmetadata->prev_next_info.le_next;
 				    if(prevmetadata->is_free==0&&nextmetadata->is_free==0){
 						currmetadata->is_free=1;
+						//cprintf("test free 7");
 					}else if(prevmetadata->is_free==1&&nextmetadata->is_free==0){
 						prevmetadata->size+=currmetadata->size;
 						currmetadata->size= 0 ;
 						currmetadata->is_free= 0;
 						prevmetadata->prev_next_info.le_next=nextmetadata;
 						nextmetadata->prev_next_info.le_prev=prevmetadata;
+						//cprintf("test free 8");
 					}else if(prevmetadata->is_free==0&&nextmetadata->is_free==1){
 						currmetadata->size+=nextmetadata->size;
 						currmetadata->prev_next_info.le_next=nextmetadata->prev_next_info.le_next;
@@ -307,6 +313,7 @@ void free_block(void *va)
 						currmetadata->is_free=1;
 						nextmetadata->size= 0;
 						nextmetadata->is_free= 0;
+						//cprintf("test free 9");
 					}else if(prevmetadata->is_free==1&&nextmetadata->is_free==1){
 						prevmetadata->size+=(nextmetadata->size+currmetadata->size);
 						prevmetadata->prev_next_info.le_next=nextmetadata->prev_next_info.le_next;
@@ -319,6 +326,7 @@ void free_block(void *va)
 						nextmetadata->is_free= 0;
 						currmetadata->size= 0 ;
 						currmetadata->is_free= 0;
+						//cprintf("test free 10");
 					}
 	}
 
@@ -329,53 +337,88 @@ void free_block(void *va)
 //=========================================
 void *realloc_block_FF(void* va, uint32 new_size){
 	//TODO: [PROJECT'23.MS1 - #8] [3] DYNAMIC ALLOCATOR - realloc_block_FF()
-	if(va != NULL)
-	{
-		struct BlockMetaData *currMetadata = ((struct BlockMetaData *)va - 1);
-		struct BlockMetaData *nextMetadata = currMetadata->prev_next_info.le_next;
-			if (new_size >= currMetadata->size){
-				if(currMetadata->prev_next_info.le_next != NULL){
-					if(currMetadata->prev_next_info.le_next->is_free == 1){
-												nextMetadata->is_free == 0;
-												cprintf("curr metadata before: %d\n", currMetadata->size);
-												currMetadata->size += nextMetadata->size;
-												cprintf("curr metadata after: %d\n", currMetadata->size);
-												currMetadata->is_free = 0;
-												currMetadata->prev_next_info.le_next=nextMetadata->prev_next_info.le_next;
-												nextMetadata->prev_next_info.le_prev = currMetadata->prev_next_info.le_prev;
-												return va;
+		if(va != NULL)
+		{
+			struct BlockMetaData *currMetaData = ((struct BlockMetaData *)va - 1);
+			//(va, 0)
+			if(new_size == 0)
+			{
+				//cprintf("free\n"); //done
+				free_block(va);
+				return NULL ;
+			}
 
-									}else{
-										cprintf("alo1");
-									return alloc_block_FF(new_size);
-								}
-				}else{
-					cprintf("alo2");
+			if(currMetaData->size > new_size + sizeOfMetaData())
+			{
+				//cprintf("currMetaData->size < new_size\n"); //done
+				uint32 reqsize=new_size+sizeOfMetaData();
+				currMetaData->is_free = 0;
+				char* address=(char*)currMetaData+reqsize;
+				struct BlockMetaData *metadata = (struct BlockMetaData *)address;
+				metadata->size=currMetaData->size-reqsize;
+				currMetaData->size=reqsize;
+				metadata->is_free=1;
+				LIST_INSERT_AFTER(&MemoryData,currMetaData,metadata);
+				char * returnedAdress=(char *)currMetaData+sizeOfMetaData();
+				return returnedAdress;
+			}
+			if(currMetaData->size == new_size + sizeOfMetaData())
+			{
+				//cprintf("currMetaData->size == new_size + sizeOfMetaData() \n"); //done
+				currMetaData->is_free = 0;
+				char * returnedAdress=(char *)currMetaData+sizeOfMetaData();
+				return returnedAdress;
+			}
+
+			if(currMetaData->prev_next_info.le_next != NULL)
+			{
+				//cprintf("currMetaData->prev_next_info.le_next != NULL \n"); //done
+				struct BlockMetaData *nextMetadata = currMetaData->prev_next_info.le_next;
+				if(nextMetadata->is_free == 1 && nextMetadata->size + currMetaData->size >= new_size + sizeOfMetaData() )
+				{
+					//cprintf("nextMetadata->is_free == 1 && nextMetadata->size + currMetaData->size >= new_size \n");
+					nextMetadata->size = nextMetadata->size + currMetaData->size - new_size - sizeOfMetaData();
+					currMetaData->size = new_size + sizeOfMetaData() ;
+					currMetaData->is_free = 0 ;
+					char* address=(char*)currMetaData+new_size+sizeOfMetaData();
+					struct BlockMetaData *metadata = (struct BlockMetaData *)address;
+					metadata->size= nextMetadata->size + currMetaData->size - new_size - sizeOfMetaData();
+					metadata->is_free=1;
+					LIST_INSERT_AFTER(&MemoryData,currMetaData,metadata);
+
+					free_block(nextMetadata + 1);
+
+
+
+
+					char * returnedAdress=(char *)currMetaData+sizeOfMetaData();
+					return returnedAdress;
+				}else
+				{
+					//cprintf("NOT nextMetadata->is_free == 1 && nextMetadata->size + currMetaData->size >= new_size \n");
+					currMetaData->is_free = 1 ;
 					return alloc_block_FF(new_size);
 				}
-			}else if(new_size < currMetadata->size){
-					cprintf("size < currMeta");
-					char* address=(char*)currMetadata+new_size;
-					struct BlockMetaData *metadata = (struct BlockMetaData *)address;
-					metadata->size=currMetadata->size-new_size;
-					currMetadata->size=new_size;
-					metadata->is_free=1;
-					return va;
-			}else if(new_size == 0){
-				cprintf("alo3");
-				free_block(va);
-				return NULL;
-		}
-	}else if(va == NULL){
-		cprintf("alo4");
-		if(new_size == 0){
-			return NULL;
-		}else{
-			cprintf("alo5");
+			}else
+			{
+				//cprintf("NOT currMetaData->prev_next_info.le_next != NULL \n");
+				currMetaData->is_free = 1 ;
+				return alloc_block_FF(new_size);
+			}
+
+
+
+
+
+		}else if (new_size != 0)	//(NULL, n)
+		{
+			//cprintf("new_size != 0 \n"); //done
 			return alloc_block_FF(new_size);
+		}else{	//(NULL, 0)
+			//cprintf("(NULL, 0) \n"); //done
+			return NULL ;
 		}
-	}
-//	panic("realloc_block_FF is not implemented yet");
-	return NULL;
+	//	panic("realloc_block_FF is not implemented yet");
+		return NULL;
 }
 
