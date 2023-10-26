@@ -343,14 +343,14 @@ void *realloc_block_FF(void* va, uint32 new_size){
 		//(va, 0)
 		if(new_size == 0)
 		{
-			cprintf("free\n"); //done
+			//cprintf("free\n"); //done
 			free_block(va);
 			return NULL ;
 		}
 
 		if(currMetaData->size > new_size + sizeOfMetaData())
 		{
-			cprintf("currMetaData->size < new_size\n"); //done
+			//cprintf("currMetaData->size < new_size\n"); //done
 			uint32 reqsize=new_size+sizeOfMetaData();
 			currMetaData->is_free = 0;
 			char* address=(char*)currMetaData+reqsize;
@@ -364,7 +364,7 @@ void *realloc_block_FF(void* va, uint32 new_size){
 		}
 		if(currMetaData->size == new_size + sizeOfMetaData())
 		{
-			cprintf("currMetaData->size == new_size + sizeOfMetaData() \n"); //done
+			//cprintf("currMetaData->size == new_size + sizeOfMetaData() \n"); //done
 			currMetaData->is_free = 0;
 			char * returnedAdress=(char *)currMetaData+sizeOfMetaData();
 			return returnedAdress;
@@ -372,11 +372,11 @@ void *realloc_block_FF(void* va, uint32 new_size){
 
 		if(currMetaData->prev_next_info.le_next != NULL)
 		{
-			cprintf("currMetaData->prev_next_info.le_next != NULL \n"); //done
+			//cprintf("currMetaData->prev_next_info.le_next != NULL \n"); //done
 			struct BlockMetaData *nextMetadata = currMetaData->prev_next_info.le_next;
 			if(nextMetadata->is_free == 1 && nextMetadata->size + currMetaData->size >= new_size + sizeOfMetaData() )
 			{
-				cprintf("nextMetadata->is_free == 1 && nextMetadata->size + currMetaData->size >= new_size \n");
+				//cprintf("nextMetadata->is_free == 1 && nextMetadata->size + currMetaData->size >= new_size \n");
 				nextMetadata->size = nextMetadata->size + currMetaData->size - new_size - sizeOfMetaData();
 				currMetaData->size = new_size + sizeOfMetaData() ;
 				currMetaData->is_free = 0 ;
@@ -395,13 +395,13 @@ void *realloc_block_FF(void* va, uint32 new_size){
 				return returnedAdress;
 			}else
 			{
-				cprintf("NOT nextMetadata->is_free == 1 && nextMetadata->size + currMetaData->size >= new_size \n");
+				//cprintf("NOT nextMetadata->is_free == 1 && nextMetadata->size + currMetaData->size >= new_size \n");
 				currMetaData->is_free = 1 ;
 				return alloc_block_FF(new_size);
 			}
 		}else
 		{
-			cprintf("NOT currMetaData->prev_next_info.le_next != NULL \n");
+			//cprintf("NOT currMetaData->prev_next_info.le_next != NULL \n");
 			currMetaData->is_free = 1 ;
 			return alloc_block_FF(new_size);
 		}
@@ -412,10 +412,10 @@ void *realloc_block_FF(void* va, uint32 new_size){
 
 	}else if (new_size != 0)	//(NULL, n)
 	{
-		cprintf("new_size != 0 \n"); //done
+		//cprintf("new_size != 0 \n"); //done
 		return alloc_block_FF(new_size);
 	}else{	//(NULL, 0)
-		cprintf("(NULL, 0) \n"); //done
+		//cprintf("(NULL, 0) \n"); //done
 		return NULL ;
 	}
 //	panic("realloc_block_FF is not implemented yet");
