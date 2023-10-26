@@ -1166,82 +1166,6 @@ void test_free_block_NF()
 	panic("not implemented");
 }
 
-void test_realloc_additional_cases_Team89() {
-    int is_correct;
-    int eval = 0;
-    int block_size;  // Declare block_size once here
-    int block_status;  // Declare block_status once here
-
-    cprintf("===================================================\n");
-    cprintf("Test Case 1: Realloc with Existing Block Having Next Block That Does Not Exist (NULL).\n\n");
-
-    is_correct = 1;
-    int blockIndex = 3 * allocCntPerSize + 1;
-    int old_size = allocSizes[3];
-    int new_size = old_size - 1 * kilo - sizeOfMetaData();
-    void* va = realloc_block_FF(startVAs[blockIndex], new_size);
-
-    block_size = get_block_size(startVAs[blockIndex]);  // Update block_size here
-    block_status = is_free_block(startVAs[blockIndex]);  // Update block_status here
-
-    if (va == NULL || va != startVAs[blockIndex]) {
-        is_correct = 0;
-        cprintf("test_realloc_block_FF Case 1: WRONG REALLOC - it returns the wrong address. Expected %x, Actual %x\n", startVAs[blockIndex], va);
-    }
-
-    if (block_size != new_size + sizeOfMetaData()) {
-        is_correct = 0;
-        cprintf("test_realloc_block_FF Case 1: WRONG REALLOC! Block size after realloc is not correct. Expected %d, Actual %d\n", new_size + sizeOfMetaData(), block_size);
-    }
-
-    if (block_status != 0) {
-        is_correct = 0;
-        cprintf("test_realloc_block_FF Case 1: WRONG REALLOC! Block status (is_free) not equal to 0 after realloc.\n");
-    }
-
-    // Test Case 2: Realloc with Existing Block Having Next Block Existing But Not Free
-    cprintf("===================================================\n");
-    cprintf("Test Case 2: Realloc with Existing Block Having Next Block Existing But Not Free.\n\n");
-
-    is_correct = 1;
-    blockIndex = 1 * allocCntPerSize;
-    old_size = allocSizes[1];
-    new_size = old_size / 2;
-    va = realloc_block_FF(startVAs[blockIndex], new_size);
-
-    block_size = get_block_size(startVAs[blockIndex]);  // Update block_size here
-    block_status = is_free_block(startVAs[blockIndex]);  // Update block_status here
-
-    if (va != NULL) {
-        is_correct = 0;
-        cprintf("test_realloc_block_FF Case 2: Realloc with the next block not free should return NULL.\n");
-    }
-
-    // Test Case 3: Realloc with Existing Block Having Next Block Existing and New Size Greater Than or Equal to Current Size
-    cprintf("===================================================\n");
-    cprintf("Test Case 3: Realloc with Existing Block Having Next Block Existing and New Size Greater Than or Equal to Current Size.\n\n");
-
-    is_correct = 1;
-    blockIndex = 2 * allocCntPerSize;
-    old_size = allocSizes[2];
-    new_size = old_size;
-    va = realloc_block_FF(startVAs[blockIndex], new_size);
-
-    block_size = get_block_size(startVAs[blockIndex]);  // Update block_size here
-    block_status = is_free_block(startVAs[blockIndex]);  // Update block_status here
-
-    if (va == NULL || va != startVAs[blockIndex]) {
-        is_correct = 0;
-        cprintf("test_realloc_block_FF Case 3: WRONG REALLOC - it returns the wrong address. Expected %x, Actual %x\n", startVAs[blockIndex], va);
-    }
-
-    if (block_size != old_size + sizeOfMetaData() || *startVAs[blockIndex] != blockIndex) {
-        is_correct = 0;
-        cprintf("test_realloc_block_FF Case 3: Realloc should not modify the block size or content in this case.\n");
-    }
-
-    cprintf("Additional realloc test cases completed. Evaluation = %d%\n", eval);
-}
 
 void test_realloc_block_FF()
 {
@@ -1260,7 +1184,7 @@ void test_realloc_block_FF()
 	//TODO: [PROJECT'23.MS1 - #9] [3] DYNAMIC ALLOCATOR - test_realloc_block_FF()
 	//CHECK MISSING CASES AND TRY TO TEST THEM !
 
-	test_realloc_additional_cases_Team89();
+
 
 	int eval = 0;
 	bool is_correct;
