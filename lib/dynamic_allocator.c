@@ -137,12 +137,16 @@ void *alloc_block_FF(uint32 size)
 		{
 			allocated=1;
 			element->is_free = 0;
-			char* address=(char*)element+reqsize;
-			struct BlockMetaData *metadata = (struct BlockMetaData *)address;
-			metadata->size=element->size-reqsize;
-		    element->size=reqsize;
-		    metadata->is_free=1;
-		    LIST_INSERT_AFTER(&MemoryData,element,metadata);
+			if(element->size-reqsize>=sizeOfMetaData()){
+				char* address=(char*)element+reqsize;
+				struct BlockMetaData *metadata = (struct BlockMetaData *)address;
+				metadata->size=element->size-reqsize;
+			    element->size=reqsize;
+				metadata->is_free=1;
+				LIST_INSERT_AFTER(&MemoryData,element,metadata);
+			}else{
+				element->size=reqsize;
+			}
 		    char * returnedAdress=(char *)element+sizeOfMetaData();
 		    return returnedAdress;
 		}
@@ -200,6 +204,8 @@ void *alloc_block_BF(uint32 size)
 	            metadata->is_free = 1;
 	            bestFit->size = reqSize;
 	            LIST_INSERT_AFTER(&MemoryData, bestFit, metadata);
+	        }else{
+	        	bestFit->size = reqSize;
 	        }
 
 	        return (void *)((char *)bestFit + sizeOfMetaData());

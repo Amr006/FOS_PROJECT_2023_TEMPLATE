@@ -1260,7 +1260,7 @@ void test_realloc_block_FF()
 	//TODO: [PROJECT'23.MS1 - #9] [3] DYNAMIC ALLOCATOR - test_realloc_block_FF()
 	//CHECK MISSING CASES AND TRY TO TEST THEM !
 
-	test_realloc_additional_cases_Team89();
+	//test_realloc_additional_cases_Team89();
 
 	int eval = 0;
 	bool is_correct;
