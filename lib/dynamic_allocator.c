@@ -402,13 +402,15 @@ void *realloc_block_FF(void* va, uint32 new_size){
 				}else
 				{
 					//cprintf("NOT nextMetadata->is_free == 1 && nextMetadata->size + currMetaData->size >= new_size \n");
-					currMetaData->is_free = 1 ;
+					//currMetaData->is_free = 1 ;
+					free_block(va);
 					return alloc_block_FF(new_size);
 				}
 			}else
 			{
 				//cprintf("NOT currMetaData->prev_next_info.le_next != NULL \n");
-				currMetaData->is_free = 1 ;
+				//currMetaData->is_free = 1 ;
+				free_block(va);
 				return alloc_block_FF(new_size);
 			}
 
