@@ -137,7 +137,7 @@ void *alloc_block_FF(uint32 size)
 		{
 			allocated=1;
 			element->is_free = 0;
-			if(element->size-reqsize>=sizeOfMetaData()){
+			if(element->size-reqsize > sizeOfMetaData()){
 				char* address=(char*)element+reqsize;
 				struct BlockMetaData *metadata = (struct BlockMetaData *)address;
 				metadata->size=element->size-reqsize;
