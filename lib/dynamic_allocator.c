@@ -86,12 +86,14 @@ void print_blocks_list(struct MemBlock_LIST list)
 // [1] INITIALIZE DYNAMIC ALLOCATOR:
 //==================================
 struct MemBlock_LIST MemoryData;
+bool is_initialized = 0;
 void initialize_dynamic_allocator(uint32 daStart, uint32 initSizeOfAllocatedSpace)
 {
 	//=========================================
 	//DON'T CHANGE THESE LINES=================
 	if (initSizeOfAllocatedSpace == 0)
 		return ;
+	is_initialized = 1;
 	//=========================================
 	//=========================================
 	struct BlockMetaData *metadata = (struct BlockMetaData *)daStart;
@@ -119,6 +121,13 @@ void *alloc_block_FF(uint32 size)
 
 	if(size==0){
 		return NULL;
+	}
+	if(!is_initialized){
+		uint32 required_size = size + sizeOfMetaData();
+		uint32 da_start = (uint32)sbrk(required_size);
+		uint32 da_break = (uint32)sbrk(0);
+
+(da_start, da_break - da_start);
 	}
 	struct BlockMetaData *element;
 	uint32 reqsize=size+sizeOfMetaData();

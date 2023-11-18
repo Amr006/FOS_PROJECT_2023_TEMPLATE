@@ -482,7 +482,7 @@ void* sys_sbrk(uint32 increment)
 {
 	//TODO: [PROJECT'23.MS2 - #08] [2] USER HEAP - Block Allocator - sys_sbrk() [Kernel Side]
 	//MS2: COMMENT THIS LINE BEFORE START CODING====
-	return (void*)-1 ;
+//	return (void*)-1 ;
 	//====================================================
 
 	/*2023*/
@@ -506,6 +506,21 @@ void* sys_sbrk(uint32 increment)
 	 */
 	struct Env* env = curenv; //the current running Environment to adjust its break limit
 
+	if(increment > env->limit || increment < env->start){
+		return (void *)-1;
+	}
+
+	if (increment > 0 && increment < env->limit){
+		uint32 old_brk = env->seg_break;
+		env->seg_break = old_brk + (4 + (increment / 4) * 4);
+		return old_brk;
+	}else if(increment < 0 && increment > env->start){
+		env->seg_break = env->seg_break - increment;
+		uint32 new_brk = env->seg_break;
+		return new_brk;
+	}else{
+		return env->seg_break;
+	}
 
 }
 
@@ -535,7 +550,8 @@ uint32 thesizeofblock=a2;
 			   {
 				 sched_kill_env(curenv->env_id);
 			   }
-				else if((thevirtualaddressoftheblock < 0 || (thevirtualaddressoftheblock + thesizeofblock) >= USER_LIMIT))
+				else if((thevirtualaddressoftheblock < 0 || (thevirtualaddressoftheblock + thesizeofblock) >= USER_
+))
 				{
 				sched_kill_env(curenv->env_id);
 				}
