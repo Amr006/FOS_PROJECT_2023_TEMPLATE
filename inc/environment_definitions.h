@@ -120,7 +120,7 @@ struct Env {
 
 #if USE_KHEAP
 	//struct WorkingSetElement* ptr_pageWorkingSet;
-	struct WS_List page_WS_list ;					//List of WS elements
+	struct WS_List page_WS_list;					//List of WS elements
 	struct WorkingSetElement* page_last_WS_element;	//ptr to last inserted WS element
 #else
 	struct WorkingSetElement ptr_pageWorkingSet[__PWS_MAX_SIZE];

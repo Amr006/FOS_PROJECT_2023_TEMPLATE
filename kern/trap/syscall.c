@@ -513,13 +513,13 @@ void* sys_sbrk(uint32 increment)
 	if (increment > 0 && increment < env->limit){
 		uint32 old_brk = env->seg_break;
 		env->seg_break = old_brk + (4 + (increment / 4) * 4);
-		return old_brk;
+		return (void*)old_brk;
 	}else if(increment < 0 && increment > env->start){
 		env->seg_break = env->seg_break - increment;
 		uint32 new_brk = env->seg_break;
-		return new_brk;
+		return (void*)new_brk;
 	}else{
-		return env->seg_break;
+		return (void*)env->seg_break;
 	}
 
 }
@@ -550,8 +550,7 @@ uint32 thesizeofblock=a2;
 			   {
 				 sched_kill_env(curenv->env_id);
 			   }
-				else if((thevirtualaddressoftheblock < 0 || (thevirtualaddressoftheblock + thesizeofblock) >= USER_
-))
+				else if((thevirtualaddressoftheblock < 0 || (thevirtualaddressoftheblock + thesizeofblock) >= USER_LIMIT))
 				{
 				sched_kill_env(curenv->env_id);
 				}
