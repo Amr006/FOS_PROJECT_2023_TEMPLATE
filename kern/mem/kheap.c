@@ -20,7 +20,7 @@ int initialize_kheap_dynamic_allocator(uint32 daStart, uint32 initSizeToAllocate
 	if (initSizeToAllocate > daLimit - daStart) {
 	        return E_NO_MEM;
 	}
-	for(int i=0;i<initSizeToAllocate;i+=DYN_ALLOC_MAX_BLOCK_SIZE){
+	for(int i=0;i<initSizeToAllocate;i+=PAGE_SIZE){
 		uint32 va = daStart+i;
 		struct FrameInfo *ptr=NULL;
 		int ret = allocate_frame(&ptr);
@@ -67,7 +67,39 @@ void* kmalloc(unsigned int size)
 	// use "isKHeapPlacementStrategyFIRSTFIT() ..." functions to check the current strategy
 
 	//change this "return" according to your answer
-	kpanic_into_prompt("kmalloc() is not implemented yet...!!");
+	//kpanic_into_prompt("kmalloc() is not implemented yet...!!");
+
+	//cprintf("the size is %d and the SIZE is %d",size,SIZE);
+	if(size <= DYN_ALLOC_MAX_BLOCK_SIZE){
+		return (void*)alloc_block_FF(size);
+	}
+
+	unsigned int SIZE = ROUNDUP(size,PAGE_SIZE);
+	int numOfFrames=SIZE/PAGE_SIZE;
+	uint32 va= kheap_hard_limit+PAGE_SIZE;
+	if(isKHeapPlacementStrategyFIRSTFIT()){
+		int counter=0;
+		for(uint32 address=va;address<KERNEL_HEAP_MAX;address+=PAGE_SIZE){
+			uint32 *ptr_page_table=NULL;
+			struct FrameInfo *frame=get_frame_info(ptr_page_directory,address,&ptr_page_table);
+			if(frame==NULL){
+				counter++;
+			}else{
+				counter=0;
+			}
+			if(counter==numOfFrames){
+				uint32 start_address = address-(numOfFrames-1)*PAGE_SIZE;
+				for(uint32 add=start_address;add<=address;add+=PAGE_SIZE){
+					struct FrameInfo *ptr=NULL;
+					int ret = allocate_frame(&ptr);
+					ret = map_frame(ptr_page_directory,ptr,add,PERM_USER | PERM_WRITEABLE);
+				}
+				return (void*)start_address;
+			}
+		}
+	}
+
+
 	return NULL;
 }
 
@@ -97,10 +129,23 @@ unsigned int kheap_physical_address(unsigned int virtual_address)
 	//TODO: [PROJECT'23.MS2 - #06] [1] KERNEL HEAP - kheap_physical_address()
 	//refer to the project presentation and documentation for details
 	// Write your code here, remove the panic and write your code
-	panic("kheap_physical_address() is not implemented yet...!!");
+	//panic("kheap_physical_address() is not implemented yet...!!");
 
 	//change this "return" according to your answer
-	return 0;
+	    uint32 *ptr_page_table = NULL;
+		get_page_table(ptr_page_table,virtual_address,&ptr_page_table);
+		if(ptr_page_table != NULL)
+		{
+			uint32 table_entry = ptr_page_table[PTX(virtual_address)];
+			uint32 tmp = table_entry >> 12; // pa without perms  20 bit
+			tmp = tmp << 12;
+			return tmp ;
+		}
+		else
+		{
+		  return -1;
+		}
+
 }
 
 
