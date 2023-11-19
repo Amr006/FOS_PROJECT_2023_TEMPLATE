@@ -43,6 +43,11 @@ int numOfKheapVACalls ;
 
 /*2023*/
 //TODO: [PROJECT'23.MS2 - #01] [1] KERNEL HEAP - initialization: add suitable code here
+uint32 kheap_start;
+uint32 kheap_segment_break;
+uint32 kheap_hard_limit;
+
+
 
 //====================================================================================
 

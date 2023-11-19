@@ -126,8 +126,7 @@ void *alloc_block_FF(uint32 size)
 		uint32 required_size = size + sizeOfMetaData();
 		uint32 da_start = (uint32)sbrk(required_size);
 		uint32 da_break = (uint32)sbrk(0);
-
-(da_start, da_break - da_start);
+		initialize_dynamic_allocator(da_start, da_break - da_start);
 	}
 	struct BlockMetaData *element;
 	uint32 reqsize=size+sizeOfMetaData();
