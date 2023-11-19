@@ -25,7 +25,7 @@ int initialize_kheap_dynamic_allocator(uint32 daStart, uint32 initSizeToAllocate
 		struct FrameInfo *ptr=NULL;
 		int ret = allocate_frame(&ptr);
 		if(ret==E_NO_MEM)return E_NO_MEM;
-		ret = map_frame(ptr_page_directory,ptr,va,PERM_USER | PERM_WRITEABLE);
+		ret = map_frame(ptr_page_directory,ptr,va,PERM_WRITEABLE);
 	}
 	kheap_start = daStart;
 	kheap_segment_break = daStart + initSizeToAllocate;
@@ -92,7 +92,7 @@ void* kmalloc(unsigned int size)
 				for(uint32 add=start_address;add<=address;add+=PAGE_SIZE){
 					struct FrameInfo *ptr=NULL;
 					int ret = allocate_frame(&ptr);
-					ret = map_frame(ptr_page_directory,ptr,add,PERM_USER | PERM_WRITEABLE);
+					ret = map_frame(ptr_page_directory,ptr,add,PERM_WRITEABLE);
 				}
 				return (void*)start_address;
 			}
@@ -143,7 +143,7 @@ unsigned int kheap_physical_address(unsigned int virtual_address)
 		}
 		else
 		{
-		  return -1;
+		  return 0;
 		}
 
 }
