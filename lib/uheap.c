@@ -1,5 +1,5 @@
 #include <inc/lib.h>
-
+#include<inc/environment_definitions.h>
 //==================================================================================//
 //============================== GIVEN FUNCTIONS ===================================//
 //==================================================================================//
@@ -42,7 +42,34 @@ void* malloc(uint32 size)
 	//==============================================================
 	//TODO: [PROJECT'23.MS2 - #09] [2] USER HEAP - malloc() [User Side]
 	// Write your code here, remove the panic and write your code
-	panic("malloc() is not implemented yet...!!");
+	//	panic("malloc() is not implemented yet...!!");
+	if (size <= DYN_ALLOC_MAX_BLOCK_SIZE){
+		return alloc_block_FF(size);
+	}else {
+		struct Env* e = NULL;
+		unsigned int SIZE = ROUNDUP(size,PAGE_SIZE);
+		int numOfFrames=SIZE/PAGE_SIZE;
+		uint32 va= e->limit+PAGE_SIZE;
+		if(sys_isUHeapPlacementStrategyFIRSTFIT()){
+			int counter=0;
+			for(uint32 address=va;address<USER_HEAP_MAX;address+=PAGE_SIZE){
+				struct FrameInfo *frame=sys_get_frame_info(address);
+				if(frame==NULL){
+					counter++;
+				}else{
+					counter=0;
+				}
+				if(counter==numOfFrames){
+					uint32 start_address = address-(numOfFrames-1)*PAGE_SIZE;
+					for(uint32 add=start_address;add<=address;add+=PAGE_SIZE){
+						struct FrameInfo *ptr=NULL;
+						sys_allocate_user_mem(add, PAGE_SIZE);
+					}
+					return (void*)start_address;
+				}
+			}
+		}
+	}
 	return NULL;
 	//Use sys_isUHeapPlacementStrategyFIRSTFIT() and	sys_isUHeapPlacementStrategyBESTFIT()
 	//to check the current strategy

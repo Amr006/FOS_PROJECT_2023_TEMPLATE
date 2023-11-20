@@ -524,6 +524,14 @@ void* sys_sbrk(uint32 increment)
 
 }
 
+// FUNCTION MADE BY MORE123 && FELFEL TEAM006 2023 TO GET GET_FRAME_INFO FOR USER SIDE MALLOC
+
+void *sys_get_frame_info(uint32 virtual_address){
+	uint32 *ptr_page_table=NULL;
+	struct FrameInfo *frame=get_frame_info(ptr_page_directory,virtual_address,&ptr_page_table);
+	return (void *)frame;
+}
+
 /**************************************************************************/
 /************************* SYSTEM CALLS HANDLER ***************************/
 /**************************************************************************/
@@ -541,6 +549,9 @@ uint32 thesizeofblock=a2;
 	{
 	/*2023*/
 	//TODO: [PROJECT'23.MS1 - #4] [2] SYSTEM CALLS - Add suitable code here
+	// sys_call for malloc at userside by more123 / felfel
+	case SYS_get_frame_info:
+		return (void *)(sys_get_frame_info)(a1);
 	case SYS_sbrk:
 		return (uint32) (sys_sbrk(a1));
 		break;
