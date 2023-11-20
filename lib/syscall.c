@@ -357,6 +357,6 @@ void sys_allocate_user_mem(uint32 virtual_address, uint32 size)
 	//panic("not implemented yet");
 
 }
-void sys_get_frame_info(uint32 virtual_address){
-	syscall(SYS_get_frame_info, virtual_address, 0, 0, 0, 0);
+struct FrameInfo * sys_get_frame_info(uint32 virtual_address){
+	return (struct FrameInfo *)syscall(SYS_get_frame_info, virtual_address, 0, 0, 0, 0);
 }

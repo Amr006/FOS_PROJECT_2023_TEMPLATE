@@ -1,5 +1,6 @@
 #include <inc/lib.h>
-#include<inc/environment_definitions.h>
+#include <inc/environment_definitions.h>
+#include<lib/syscall.c>
 //==================================================================================//
 //============================== GIVEN FUNCTIONS ===================================//
 //==================================================================================//
@@ -53,7 +54,7 @@ void* malloc(uint32 size)
 		if(sys_isUHeapPlacementStrategyFIRSTFIT()){
 			int counter=0;
 			for(uint32 address=va;address<USER_HEAP_MAX;address+=PAGE_SIZE){
-				struct FrameInfo *frame=sys_get_frame_info(address);
+				struct FrameInfo *frame = (struct FrameInfo *)sys_get_frame_info(address);
 				if(frame==NULL){
 					counter++;
 				}else{
