@@ -506,22 +506,28 @@ void* sys_sbrk(uint32 increment)
 	 */
 	struct Env* env = curenv; //the current running Environment to adjust its break limit
 
-	if(increment > env->limit || increment < env->start){
-		return (void *)-1;
-	}
-
-	if (increment > 0 && increment < env->limit){
-		uint32 old_brk = env->seg_break;
-		env->seg_break = old_brk + (4 + (increment / 4) * 4);
-		return (void*)old_brk;
-	}else if(increment < 0 && increment > env->start){
-		env->seg_break = env->seg_break - increment;
-		uint32 new_brk = env->seg_break;
-		return (void*)new_brk;
-	}else{
-		return (void*)env->seg_break;
-	}
-
+	uint32 old_Break= env->seg_break;
+			if (increment > 0 ){
+				unsigned int SIZE = ROUNDUP(increment,PAGE_SIZE);
+					env->seg_break += SIZE;
+					if(env->seg_break <= env->limit)
+					{
+						return (void *)old_Break;
+					}else{
+						return (void *)-1;
+					}
+			}
+		else if(increment == 0){
+			return (void *)old_Break;
+		}else{
+			unsigned int SIZE = ROUNDDOWN(increment, PAGE_SIZE);
+			env->seg_break -= SIZE;
+			if(env->seg_break >= env->start){
+				return (void *)env->seg_break;
+			}else{
+				return (void *)-1;
+			}
+		}
 }
 
 // FUNCTION MADE BY MORE123 && FELFEL TEAM006 2023 TO GET GET_FRAME_INFO FOR USER SIDE MALLOC

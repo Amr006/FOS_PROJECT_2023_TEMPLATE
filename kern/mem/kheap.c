@@ -87,7 +87,7 @@ void* sbrk(int increment)
 	}else{
 		unsigned int SIZE = ROUNDDOWN(increment, PAGE_SIZE);
 		kheap_segment_break -= SIZE;
-		if(kheap_segment_break >= KERNEL_HEAP_START){
+		if(kheap_segment_break >= kheap_start){
 			for(uint32 va = old_Break; va >= kheap_segment_break; va-= PAGE_SIZE){
 				uint32 *ptr_page_table=NULL;
 				struct FrameInfo *frame=get_frame_info(ptr_page_directory,va,&ptr_page_table);
