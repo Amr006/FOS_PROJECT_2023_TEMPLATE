@@ -68,7 +68,7 @@ void* sbrk(int increment)
 					uint32 *ptr_page_table=NULL;
 					struct FrameInfo *frame=get_frame_info(ptr_page_directory,va,&ptr_page_table);
 					if(frame != NULL){
-						panic("NOT ENOUGHT FREE FRAMES!");
+						panic("THERE ARE NO FREE FRAMES");
 						return (void *)-1;
 					}else{
 						struct FrameInfo *ptr=NULL;
