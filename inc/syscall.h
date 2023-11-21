@@ -56,6 +56,7 @@ enum
 	SYS_sbrk,
 	SYS_allocate_user_mem,
 	SYS_free_user_mem,
+    SYS_getKlimit,
 	// sys_call to get frame_info for malloc at user side
 	SYS_get_frame_info,
 	//=====================================================================

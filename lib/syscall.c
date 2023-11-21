@@ -360,3 +360,7 @@ void sys_allocate_user_mem(uint32 virtual_address, uint32 size)
 struct FrameInfo * sys_get_frame_info(uint32 virtual_address){
 	return (struct FrameInfo *)syscall(SYS_get_frame_info, virtual_address, 0, 0, 0, 0);
 }
+
+uint32 sys_getKlimit(){
+    return (uint32)syscall(SYS_getKlimit, 0,0,0,0,0);
+}

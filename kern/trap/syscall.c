@@ -4,7 +4,7 @@
 #include <inc/error.h>
 #include <inc/string.h>
 #include <inc/assert.h>
-
+#include <kern/mem/kheap.h>
 #include <kern/proc/user_environment.h>
 #include "trap.h"
 #include "syscall.h"
@@ -538,6 +538,11 @@ struct FrameInfo *sys_get_frame_info(uint32 virtual_address){
 	return frame;
 }
 
+
+uint32 sys_getKlimit()
+{
+	return kheap_hard_limit;
+}
 /**************************************************************************/
 /************************* SYSTEM CALLS HANDLER ***************************/
 /**************************************************************************/
@@ -559,6 +564,8 @@ uint32 thesizeofblock=a2;
 	case SYS_get_frame_info:
 		return (uint32)(sys_get_frame_info)(a1);
 		break;
+	case SYS_getKlimit:
+		return (uint32)(sys_getKlimit);
 	case SYS_sbrk:
 		return (uint32) (sys_sbrk(a1));
 		break;
