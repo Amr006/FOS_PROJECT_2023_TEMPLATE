@@ -520,7 +520,7 @@ void* sys_sbrk(uint32 increment)
 		else if(increment == 0){
 			return (void *)old_Break;
 		}else{
-			unsigned int SIZE = ROUNDDOWN(increment, PAGE_SIZE);
+			unsigned int SIZE = increment;
 			env->seg_break -= SIZE;
 			if(env->seg_break >= env->start){
 				return (void *)env->seg_break;

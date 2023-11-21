@@ -85,14 +85,26 @@ void* sbrk(int increment)
 	}else if(increment == 0){
 		return (void *)kheap_segment_break;
 	}else{
-		unsigned int SIZE = ROUNDDOWN(increment, PAGE_SIZE);
+		unsigned int SIZE = increment;
 		kheap_segment_break -= SIZE;
 		if(kheap_segment_break >= kheap_start){
+			if (increment % 4 == 0){
 			for(uint32 va = old_Break; va >= kheap_segment_break; va-= PAGE_SIZE){
 				uint32 *ptr_page_table=NULL;
 				struct FrameInfo *frame=get_frame_info(ptr_page_directory,va,&ptr_page_table);
 				free_frame(frame);
 				unmap_frame(ptr_page_directory, va);
+			}
+			}else{
+				if (increment / PAGE_SIZE > 0){
+					uint32 numOfPages = increment / PAGE_SIZE, nearesTInt = old_Break - (numOfPages * PAGE_SIZE);
+					for(uint32 va = old_Break; va >= nearesTInt; va-= PAGE_SIZE){
+									uint32 *ptr_page_table=NULL;
+									struct FrameInfo *frame=get_frame_info(ptr_page_directory,va,&ptr_page_table);
+									free_frame(frame);
+									unmap_frame(ptr_page_directory, va);
+								}
+				}
 			}
 			return (void *)kheap_segment_break;
 		}else{
