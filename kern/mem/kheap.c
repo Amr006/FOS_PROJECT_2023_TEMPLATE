@@ -25,7 +25,7 @@ int initialize_kheap_dynamic_allocator(uint32 daStart, uint32 initSizeToAllocate
 		struct FrameInfo *ptr=NULL;
 		int ret = allocate_frame(&ptr);
 		if(ret==E_NO_MEM)return E_NO_MEM;
-		ret = map_frame(ptr_page_directory,ptr,va,PERM_USER | PERM_WRITEABLE);
+		ret = map_frame(ptr_page_directory,ptr,va,PERM_WRITEABLE);
 	}
 	kheap_start = daStart;
 	kheap_segment_break = daStart + initSizeToAllocate;
@@ -55,11 +55,52 @@ void* sbrk(int increment)
 	 */
 
 	//MS2: COMMENT THIS LINE BEFORE START CODING====
-	return (void*)-1 ;
-	panic("not implemented yet");
+//	return (void*)-1 ;
+//	panic("not implemented yet");
+
+
+	uint32 old_Break= kheap_segment_break;
+		if (increment > 0 ){
+			unsigned int SIZE = ROUNDUP(increment,PAGE_SIZE);
+				kheap_segment_break += SIZE;
+				if(kheap_segment_break <= kheap_hard_limit){
+				for (uint32 va = old_Break; va<=kheap_segment_break;va+=PAGE_SIZE){
+					uint32 *ptr_page_table=NULL;
+					struct FrameInfo *frame=get_frame_info(ptr_page_directory,va,&ptr_page_table);
+					if(frame != NULL){
+						panic("NOT ENOUGHT FREE FRAMES!");
+						return (void *)-1;
+					}else{
+						struct FrameInfo *ptr=NULL;
+						int ret = allocate_frame(&ptr);
+						ret = map_frame(ptr_page_directory,ptr,va,PERM_WRITEABLE);
+				}
+		}
+				return (void *)old_Break;
+
+				}else{
+					panic("BREAK EXCEEDED HARD LIMIT !");
+					return (void *)-1;
+				}
+	}else if(increment == 0){
+		return (void *)kheap_segment_break;
+	}else{
+		unsigned int SIZE = ROUNDDOWN(increment, PAGE_SIZE);
+		kheap_segment_break -= SIZE;
+		if(kheap_segment_break >= kheap_start){
+			for(uint32 va = old_Break; va >= kheap_segment_break; va-= PAGE_SIZE){
+				uint32 *ptr_page_table=NULL;
+				struct FrameInfo *frame=get_frame_info(ptr_page_directory,va,&ptr_page_table);
+				free_frame(frame);
+				unmap_frame(ptr_page_directory, va);
+			}
+			return (void *)kheap_segment_break;
+		}else{
+			panic("BREAK GOT LESS THAN KERNEL_HEAP_START !");
+			return (void *)-1;
+		}
+	}
 }
-
-
 void* kmalloc(unsigned int size)
 {
 	//TODO: [PROJECT'23.MS2 - #03] [1] KERNEL HEAP - kmalloc()
@@ -92,7 +133,7 @@ void* kmalloc(unsigned int size)
 				for(uint32 add=start_address;add<=address;add+=PAGE_SIZE){
 					struct FrameInfo *ptr=NULL;
 					int ret = allocate_frame(&ptr);
-					ret = map_frame(ptr_page_directory,ptr,add,PERM_USER | PERM_WRITEABLE);
+					ret = map_frame(ptr_page_directory,ptr,add,PERM_WRITEABLE);
 				}
 				return (void*)start_address;
 			}

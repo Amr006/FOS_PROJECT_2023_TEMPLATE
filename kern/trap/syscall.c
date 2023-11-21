@@ -4,7 +4,7 @@
 #include <inc/error.h>
 #include <inc/string.h>
 #include <inc/assert.h>
-
+#include <kern/mem/kheap.h>
 #include <kern/proc/user_environment.h>
 #include "trap.h"
 #include "syscall.h"
@@ -506,24 +506,43 @@ void* sys_sbrk(uint32 increment)
 	 */
 	struct Env* env = curenv; //the current running Environment to adjust its break limit
 
-	if(increment > env->limit || increment < env->start){
-		return (void *)-1;
-	}
-
-	if (increment > 0 && increment < env->limit){
-		uint32 old_brk = env->seg_break;
-		env->seg_break = old_brk + (4 + (increment / 4) * 4);
-		return (void*)old_brk;
-	}else if(increment < 0 && increment > env->start){
-		env->seg_break = env->seg_break - increment;
-		uint32 new_brk = env->seg_break;
-		return (void*)new_brk;
-	}else{
-		return (void*)env->seg_break;
-	}
-
+	uint32 old_Break= env->seg_break;
+			if (increment > 0 ){
+				unsigned int SIZE = ROUNDUP(increment,PAGE_SIZE);
+					env->seg_break += SIZE;
+					if(env->seg_break <= env->limit)
+					{
+						return (void *)old_Break;
+					}else{
+						return (void *)-1;
+					}
+			}
+		else if(increment == 0){
+			return (void *)old_Break;
+		}else{
+			unsigned int SIZE = ROUNDDOWN(increment, PAGE_SIZE);
+			env->seg_break -= SIZE;
+			if(env->seg_break >= env->start){
+				return (void *)env->seg_break;
+			}else{
+				return (void *)-1;
+			}
+		}
 }
 
+// FUNCTION MADE BY MORE123 && FELFEL TEAM006 2023 TO GET GET_FRAME_INFO FOR USER SIDE MALLOC
+
+struct FrameInfo *sys_get_frame_info(uint32 virtual_address){
+	uint32 *ptr_page_table=NULL;
+	struct FrameInfo *frame=get_frame_info(ptr_page_directory,virtual_address,&ptr_page_table);
+	return frame;
+}
+
+
+uint32 sys_getKlimit()
+{
+	return kheap_hard_limit;
+}
 /**************************************************************************/
 /************************* SYSTEM CALLS HANDLER ***************************/
 /**************************************************************************/
@@ -541,6 +560,12 @@ uint32 thesizeofblock=a2;
 	{
 	/*2023*/
 	//TODO: [PROJECT'23.MS1 - #4] [2] SYSTEM CALLS - Add suitable code here
+	// sys_call for malloc at userside by more123 / felfel
+	case SYS_get_frame_info:
+		return (uint32)(sys_get_frame_info)(a1);
+		break;
+	case SYS_getKlimit:
+		return (uint32)(sys_getKlimit);
 	case SYS_sbrk:
 		return (uint32) (sys_sbrk(a1));
 		break;
