@@ -87,7 +87,7 @@ void* sbrk(int increment)
 	}else{
 		unsigned int SIZE = ROUNDDOWN(increment, PAGE_SIZE);
 		kheap_segment_break -= SIZE;
-		if(kheap_segment_break >= KERNEL_HEAP_START){
+		if(kheap_segment_break >= kheap_start){
 			for(uint32 va = old_Break; va >= kheap_segment_break; va-= PAGE_SIZE){
 				uint32 *ptr_page_table=NULL;
 				struct FrameInfo *frame=get_frame_info(ptr_page_directory,va,&ptr_page_table);
@@ -157,11 +157,23 @@ unsigned int kheap_virtual_address(unsigned int physical_address)
 	//TODO: [PROJECT'23.MS2 - #05] [1] KERNEL HEAP - kheap_virtual_address()
 	//refer to the project presentation and documentation for details
 	// Write your code here, remove the panic and write your code
-	panic("kheap_virtual_address() is not implemented yet...!!");
-
 	//EFFICIENT IMPLEMENTATION ~O(1) IS REQUIRED ==================
-
 	//change this "return" according to your answer
+
+	struct FrameInfo *ptr=NULL;
+	ptr = to_frame_info(ROUNDDOWN(physical_address , PAGE_SIZE)) ;
+
+	if(ptr != NULL)
+	{
+		return ptr->va ;
+	}else
+	{
+		return 0 ;
+	}
+
+
+
+
 	return 0;
 }
 
