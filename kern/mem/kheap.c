@@ -116,11 +116,23 @@ unsigned int kheap_virtual_address(unsigned int physical_address)
 	//TODO: [PROJECT'23.MS2 - #05] [1] KERNEL HEAP - kheap_virtual_address()
 	//refer to the project presentation and documentation for details
 	// Write your code here, remove the panic and write your code
-	panic("kheap_virtual_address() is not implemented yet...!!");
-
 	//EFFICIENT IMPLEMENTATION ~O(1) IS REQUIRED ==================
-
 	//change this "return" according to your answer
+
+	struct FrameInfo *ptr=NULL;
+	ptr = to_frame_info(ROUNDDOWN(physical_address , PAGE_SIZE)) ;
+
+	if(ptr != NULL)
+	{
+		return ptr->va ;
+	}else
+	{
+		return 0 ;
+	}
+
+
+
+
 	return 0;
 }
 
@@ -143,7 +155,7 @@ unsigned int kheap_physical_address(unsigned int virtual_address)
 		}
 		else
 		{
-		  return -1;
+		  return 0;
 		}
 
 }
