@@ -4,7 +4,7 @@
 //==================================================================================//
 //============================== GIVEN FUNCTIONS ===================================//
 //==================================================================================//
-
+int arr_CheckFree[3000] = {1};
 int FirstTimeFlag = 1;
 void InitializeUHeap()
 {
@@ -55,9 +55,10 @@ void* malloc(uint32 size)
 			int counter=0;
 			for(uint32 address=va;address<USER_HEAP_MAX;address+=PAGE_SIZE){
 				struct FrameInfo *frame = (struct FrameInfo *)sys_get_frame_info(address);
-				if(frame->references == 0){
+				if(frame->references == 0 && arr_CheckFree[address] == 1){
 					counter++;
 					frame->references++;
+					arr_CheckFree[address] = 0;
 				}else{
 					counter=0;
 				}
