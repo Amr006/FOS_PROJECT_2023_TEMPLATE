@@ -124,7 +124,16 @@ void allocate_user_mem(struct Env* e, uint32 virtual_address, uint32 size)
 //	return;
 	/*=============================================================================*/
 
-
+	uint32 * ptr_page_table = NULL;
+	get_page_table(e->env_page_directory, virtual_address, &ptr_page_table);
+	uint32 page_table_entry;
+	if(ptr_page_table == NULL){
+		ptr_page_table = create_page_table(e->env_page_directory, virtual_address);
+	}
+	for(uint32 va = virtual_address; va <= (va + size); va += PAGE_SIZE){
+		page_table_entry = ptr_page_table[PTX(virtual_address)]; // get the page table entry
+		page_table_entry = page_table_entry & PERM_AVAILABLE;
+	}
 
 	// Write your code here, remove the panic and write your code
 //	panic("allocate_user_mem() is not implemented yet...!!");
