@@ -151,7 +151,7 @@ void* kmalloc(unsigned int size)
 			if(counter==numOfFrames){
 				if(address>=KERNEL_HEAP_MAX)
 					return NULL;
-				uint32 start_address = address-(numOfFrames-1)*PAGE_SIZE;
+				uint32 start_address = address-(numOfFrames)*PAGE_SIZE;
 				int counter=0;
 				for(uint32 add=start_address;add<=address;add+=PAGE_SIZE){
 					struct FrameInfo *ptr=NULL;
@@ -183,6 +183,8 @@ void kfree(void* virtual_address)
 	    	struct FrameInfo *frame=get_frame_info(ptr_page_directory,(uint32)virtual_address,&ptr_page_table);
 	    	uint32 va = (uint32)virtual_address + PAGE_SIZE * frame->numberOfFrames;
 	    	for(uint32 add=(uint32)virtual_address;add<va;add+=PAGE_SIZE){
+	    		frame = get_frame_info(ptr_page_directory,add,&ptr_page_table);
+	    		frame->va = 0 ;
 	    		unmap_frame(ptr_page_directory,add);
 	        }
 	   }else{
@@ -198,7 +200,7 @@ unsigned int kheap_virtual_address(unsigned int physical_address)
 	// Write your code here, remove the panic and write your code
 	//EFFICIENT IMPLEMENTATION ~O(1) IS REQUIRED ==================
 	//change this "return" according to your answer
-
+	uint32 offset = physical_address%PAGE_SIZE;
 	struct FrameInfo * ptr_frame_info = NULL ;
 	//	cprintf("physical_address %x\n",physical_address);
 		ptr_frame_info = to_frame_info(ROUNDDOWN((uint32)physical_address,PAGE_SIZE));
@@ -206,14 +208,16 @@ unsigned int kheap_virtual_address(unsigned int physical_address)
 
 		if(ptr_frame_info != NULL)
 		{
-			return (unsigned int)ptr_frame_info->va;
+			if((unsigned int)ptr_frame_info->va == 0)
+			{
+				return 0 ;
+			}
+			return (unsigned int)ptr_frame_info->va + offset;
 		}
-		return (unsigned int) NULL;
+		return 0;
 
 
 
-
-	return 0;
 }
 
 unsigned int kheap_physical_address(unsigned int virtual_address)
