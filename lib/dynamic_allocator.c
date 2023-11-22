@@ -166,6 +166,10 @@ void *alloc_block_FF(uint32 size)
 			return NULL;
 		}
 		else{
+			struct BlockMetaData *metadata = (struct BlockMetaData *)res;
+			metadata->size=reqsize;
+			metadata->is_free=0;
+			LIST_INSERT_TAIL(&MemoryData,metadata);
 			return(struct BlockMetaData*)(res + sizeOfMetaData());
 		}
 	}

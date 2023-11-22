@@ -211,6 +211,7 @@ struct FrameInfo {
 
 	uint16 references;
 	uint32 va;
+	uint32 numberOfFrames;
 	struct Env *environment;
 	unsigned char isBuffered;
 	struct WorkingSetElement *element;

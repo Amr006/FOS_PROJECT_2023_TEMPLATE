@@ -3,7 +3,9 @@
 #include <inc/memlayout.h>
 #include <inc/dynamic_allocator.h>
 #include "memory_manager.h"
-
+int startAddress[700];
+int endAddress[700];
+int prcounter=0;
 
 int initialize_kheap_dynamic_allocator(uint32 daStart, uint32 initSizeToAllocate, uint32 daLimit)
 {
@@ -147,11 +149,16 @@ void* kmalloc(unsigned int size)
 				counter=0;
 			}
 			if(counter==numOfFrames){
+				if(address>=KERNEL_HEAP_MAX)
+					return NULL;
 				uint32 start_address = address-(numOfFrames-1)*PAGE_SIZE;
+				int counter=0;
 				for(uint32 add=start_address;add<=address;add+=PAGE_SIZE){
 					struct FrameInfo *ptr=NULL;
 					int ret = allocate_frame(&ptr);
 					ret = map_frame(ptr_page_directory,ptr,add,PERM_WRITEABLE);
+					ptr->va=add;
+					ptr->numberOfFrames=numOfFrames;
 				}
 				return (void*)start_address;
 			}
@@ -167,7 +174,21 @@ void kfree(void* virtual_address)
 	//TODO: [PROJECT'23.MS2 - #04] [1] KERNEL HEAP - kfree()
 	//refer to the project presentation and documentation for details
 	// Write your code here, remove the panic and write your code
-	panic("kfree() is not implemented yet...!!");
+
+	    if(((uint32)virtual_address>kheap_start)&&((uint32)virtual_address<kheap_hard_limit)){
+	    	free_block(virtual_address);
+	    }
+	    else if(((uint32)virtual_address > (kheap_hard_limit + PAGE_SIZE)) && ((uint32)virtual_address < KERNEL_HEAP_MAX)){
+	    	uint32 *ptr_page_table=NULL;
+	    	struct FrameInfo *frame=get_frame_info(ptr_page_directory,(uint32)virtual_address,&ptr_page_table);
+	    	uint32 va = (uint32)virtual_address + PAGE_SIZE * frame->numberOfFrames;
+	    	for(uint32 add=(uint32)virtual_address;add<va;add+=PAGE_SIZE){
+	    		unmap_frame(ptr_page_directory,add);
+	        }
+	   }else{
+		   panic("kfree() painc");
+	   }
+
 }
 
 unsigned int kheap_virtual_address(unsigned int physical_address)
@@ -178,16 +199,16 @@ unsigned int kheap_virtual_address(unsigned int physical_address)
 	//EFFICIENT IMPLEMENTATION ~O(1) IS REQUIRED ==================
 	//change this "return" according to your answer
 
-	struct FrameInfo *ptr=NULL;
-	ptr = to_frame_info(ROUNDDOWN(physical_address , PAGE_SIZE)) ;
+	struct FrameInfo * ptr_frame_info = NULL ;
+	//	cprintf("physical_address %x\n",physical_address);
+		ptr_frame_info = to_frame_info(ROUNDDOWN((uint32)physical_address,PAGE_SIZE));
+	//	cprintf("virt %x\n",ptr_frame_info->va);
 
-	if(ptr != NULL)
-	{
-		return ptr->va ;
-	}else
-	{
-		return 0 ;
-	}
+		if(ptr_frame_info != NULL)
+		{
+			return (unsigned int)ptr_frame_info->va;
+		}
+		return (unsigned int) NULL;
 
 
 
