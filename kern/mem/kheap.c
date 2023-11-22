@@ -153,7 +153,7 @@ void* kmalloc(unsigned int size)
 			if(counter==numOfFrames){
 				if(address>=KERNEL_HEAP_MAX)
 					return NULL;
-				uint32 start_address = address-(numOfFrames)*PAGE_SIZE;
+				uint32 start_address = address-(numOfFrames-1)*PAGE_SIZE;
 				int counter=0;
 				for(uint32 add=start_address;add<=address;add+=PAGE_SIZE){
 					struct FrameInfo *ptr=NULL;
