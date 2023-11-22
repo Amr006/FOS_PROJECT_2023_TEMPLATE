@@ -62,8 +62,8 @@ void* sbrk(int increment)
 	uint32 rounded_Break = 0;
 	uint32 old_Break = kheap_segment_break;
 		if (increment > 0 ){
-			if (old_Break != 1){
-				rounded_Break = ROUNDUP(kheap_segment_break, 4);
+			if (old_Break != kheap_start){
+				rounded_Break = ROUNDUP(kheap_segment_break, PAGE_SIZE);
 			}else{
 				rounded_Break = kheap_segment_break;
 			}
@@ -72,6 +72,7 @@ void* sbrk(int increment)
 			uint32 new_Limit = rounded_Break + SIZE;
 				if(new_Limit <= kheap_hard_limit){
 				for (uint32 va = rounded_Break; va<=new_Limit;va+=PAGE_SIZE){
+//					cprintf("SKAKR\t %d \n\n\n\n", va);
 					uint32 *ptr_page_table=NULL;
 					struct FrameInfo *frame=get_frame_info(ptr_page_directory,va,&ptr_page_table);
 					if(frame != NULL){
@@ -83,6 +84,7 @@ void* sbrk(int increment)
 						ret = map_frame(ptr_page_directory,ptr,va,PERM_WRITEABLE);
 				}
 		}
+//				cprintf("SKAKR2 \n\n\n\n\n");
 				return (void *)old_Break;
 
 				}else{
@@ -95,7 +97,7 @@ void* sbrk(int increment)
 		unsigned int SIZE = increment;
 		kheap_segment_break -= SIZE;
 		if(kheap_segment_break >= kheap_start){
-			if (increment % 4 == 0){
+			if (increment % PAGE_SIZE == 0){
 			for(uint32 va = old_Break; va >= kheap_segment_break; va-= PAGE_SIZE){
 				uint32 *ptr_page_table=NULL;
 				struct FrameInfo *frame=get_frame_info(ptr_page_directory,va,&ptr_page_table);
@@ -105,7 +107,7 @@ void* sbrk(int increment)
 			}else{
 				if (increment / PAGE_SIZE > 0){
 					for(uint32 va = old_Break; va >= kheap_segment_break; va--){
-						if(va % 4 == 0){
+						if(va % PAGE_SIZE == 0){
 									uint32 *ptr_page_table=NULL;
 									struct FrameInfo *frame=get_frame_info(ptr_page_directory,va,&ptr_page_table);
 									free_frame(frame);
