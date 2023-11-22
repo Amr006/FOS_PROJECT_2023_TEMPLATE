@@ -55,8 +55,9 @@ void* malloc(uint32 size)
 			int counter=0;
 			for(uint32 address=va;address<USER_HEAP_MAX;address+=PAGE_SIZE){
 				struct FrameInfo *frame = (struct FrameInfo *)sys_get_frame_info(address);
-				if(frame==NULL){
+				if(frame->references == 0){
 					counter++;
+					frame->references++;
 				}else{
 					counter=0;
 				}

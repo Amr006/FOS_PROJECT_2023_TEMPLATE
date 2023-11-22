@@ -57,14 +57,19 @@ void* sbrk(int increment)
 	//MS2: COMMENT THIS LINE BEFORE START CODING====
 //	return (void*)-1 ;
 //	panic("not implemented yet");
-
-
-	uint32 old_Break= kheap_segment_break;
+	uint32 rounded_Break = 0;
+	uint32 old_Break = kheap_segment_break;
 		if (increment > 0 ){
+			if (old_Break != 1){
+				rounded_Break = ROUNDUP(kheap_segment_break, 4);
+			}else{
+				rounded_Break = kheap_segment_break;
+			}
 			unsigned int SIZE = ROUNDUP(increment,PAGE_SIZE);
-				kheap_segment_break += SIZE;
-				if(kheap_segment_break <= kheap_hard_limit){
-				for (uint32 va = old_Break; va<=kheap_segment_break;va+=PAGE_SIZE){
+			kheap_segment_break += SIZE;
+			uint32 new_Limit = rounded_Break + SIZE;
+				if(new_Limit <= kheap_hard_limit){
+				for (uint32 va = rounded_Break; va<=new_Limit;va+=PAGE_SIZE){
 					uint32 *ptr_page_table=NULL;
 					struct FrameInfo *frame=get_frame_info(ptr_page_directory,va,&ptr_page_table);
 					if(frame != NULL){
@@ -97,13 +102,14 @@ void* sbrk(int increment)
 			}
 			}else{
 				if (increment / PAGE_SIZE > 0){
-					uint32 numOfPages = increment / PAGE_SIZE, nearesTInt = old_Break - (numOfPages * PAGE_SIZE);
-					for(uint32 va = old_Break; va >= nearesTInt; va-= PAGE_SIZE){
+					for(uint32 va = old_Break; va >= kheap_segment_break; va--){
+						if(va % 4 == 0){
 									uint32 *ptr_page_table=NULL;
 									struct FrameInfo *frame=get_frame_info(ptr_page_directory,va,&ptr_page_table);
 									free_frame(frame);
 									unmap_frame(ptr_page_directory, va);
 								}
+					}
 				}
 			}
 			return (void *)kheap_segment_break;

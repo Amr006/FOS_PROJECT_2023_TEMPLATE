@@ -506,10 +506,10 @@ void* sys_sbrk(uint32 increment)
 	 */
 	struct Env* env = curenv; //the current running Environment to adjust its break limit
 
-	uint32 old_Break= env->seg_break;
+	uint32 old_Break = env->seg_break;
 			if (increment > 0 ){
-				unsigned int SIZE = ROUNDUP(increment,PAGE_SIZE);
-					env->seg_break += SIZE;
+					env->seg_break += increment;
+					env->seg_break = ROUNDUP(env->seg_break, PAGE_SIZE);
 					if(env->seg_break <= env->limit)
 					{
 						return (void *)old_Break;
@@ -518,7 +518,7 @@ void* sys_sbrk(uint32 increment)
 					}
 			}
 		else if(increment == 0){
-			return (void *)old_Break;
+			return (void *)env->seg_break;
 		}else{
 			unsigned int SIZE = increment;
 			env->seg_break -= SIZE;
