@@ -326,6 +326,7 @@ void __static_cpt(uint32 *ptr_directory, const uint32 virtual_address, uint32 **
 int map_frame(uint32 *ptr_page_directory, struct FrameInfo *ptr_frame_info, uint32 virtual_address, int perm)
 {
 	// Fill this function in
+	ptr_frame_info->va=virtual_address;
 	uint32 physical_address = to_physical_address(ptr_frame_info);
 	uint32 *ptr_page_table;
 	if( get_page_table(ptr_page_directory, virtual_address, &ptr_page_table) == TABLE_NOT_EXIST)

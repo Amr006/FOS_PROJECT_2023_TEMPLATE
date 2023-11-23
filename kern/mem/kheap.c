@@ -159,7 +159,6 @@ void* kmalloc(unsigned int size)
 					struct FrameInfo *ptr=NULL;
 					int ret = allocate_frame(&ptr);
 					ret = map_frame(ptr_page_directory,ptr,add,PERM_WRITEABLE);
-					ptr->va=add;
 					ptr->numberOfFrames=numOfFrames;
 				}
 				return (void*)start_address;
@@ -230,18 +229,15 @@ unsigned int kheap_physical_address(unsigned int virtual_address)
 	//panic("kheap_physical_address() is not implemented yet...!!");
 
 	//change this "return" according to your answer
-	    uint32 *ptr_page_table = NULL;
-		get_page_table(ptr_page_table,virtual_address,&ptr_page_table);
-		if(ptr_page_table != NULL)
-		{
-			uint32 table_entry = ptr_page_table[PTX(virtual_address)];
-			uint32 tmp = table_entry >> 12; // pa without perms  20 bit
-			tmp = tmp << 12;
-			return tmp ;
+	uint32 offset = virtual_address & 0x00000FFF;
+	uint32 *ptr_page_table;
+		struct FrameInfo * my_frame;
+		my_frame = get_frame_info(ptr_page_directory,virtual_address,&ptr_page_table);
+		if(my_frame == NULL){
+			return 0;
 		}
-		else
-		{
-		  return 0;
+		else{
+			return to_physical_address(my_frame) + offset;
 		}
 
 }
