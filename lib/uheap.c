@@ -57,7 +57,6 @@ void* malloc(uint32 size)
 				struct FrameInfo *frame = (struct FrameInfo *)sys_get_frame_info(address);
 				if(frame->references == 0 && arr_CheckFree[address] == 1){
 					counter++;
-					frame->references++;
 					arr_CheckFree[address] = 0;
 				}else{
 					counter=0;
