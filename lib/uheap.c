@@ -51,10 +51,10 @@ void* malloc(uint32 size)
 	if (size <= DYN_ALLOC_MAX_BLOCK_SIZE){
 		return alloc_block_FF(size);
 	}else {
-		struct Env* e = NULL;
 		unsigned int SIZE = ROUNDUP(size,PAGE_SIZE);
+		uint32 limit = sys_getKlimit()->limit;
 		int numOfFrames=SIZE/PAGE_SIZE;
-		uint32 va= e->limit+PAGE_SIZE;
+		uint32 va = limit+PAGE_SIZE;
 		if(sys_isUHeapPlacementStrategyFIRSTFIT()){
 			int counter=0;
 			for(uint32 address=va;address<USER_HEAP_MAX;address+=PAGE_SIZE){
@@ -93,11 +93,11 @@ void free(void* virtual_address)
 {
 	//TODO: [PROJECT'23.MS2 - #11] [2] USER HEAP - free() [User Side]
 	// Write your code here, remove the panic and write your code
-
-    if(((uint32)virtual_address>=curenv->start)&&((uint32)virtual_address<= curenv->seg_break)){
+	struct Env* en = sys_getKlimit();
+	if(((uint32)virtual_address>=en->start)&&((uint32)virtual_address<= en->seg_break)){
     	free_block(virtual_address);
     }
-    else if(((uint32)virtual_address >= (curenv->limit + PAGE_SIZE)) && ((uint32)virtual_address <= KERNEL_HEAP_MAX)){
+    else if(((uint32)virtual_address >= (en->limit + PAGE_SIZE)) && ((uint32)virtual_address <= KERNEL_HEAP_MAX)){
     	for(int i = 0 ; i < freeCounter ; i++)
     			{
     				if((void *)startAdd[i] == virtual_address)

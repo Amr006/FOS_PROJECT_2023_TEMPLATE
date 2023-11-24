@@ -539,9 +539,9 @@ struct FrameInfo *sys_get_frame_info(uint32 virtual_address){
 }
 
 
-uint32 sys_getKlimit()
+struct Env * sys_getKlimit()
 {
-	return kheap_hard_limit;
+	return curenv;
 }
 /**************************************************************************/
 /************************* SYSTEM CALLS HANDLER ***************************/
