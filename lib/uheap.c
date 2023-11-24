@@ -1,11 +1,15 @@
 #include <inc/lib.h>
 #include <inc/environment_definitions.h>
 #include<lib/syscall.c>
+
 //==================================================================================//
 //============================== GIVEN FUNCTIONS ===================================//
 //==================================================================================//
 int arr_CheckFree[3000] = {1};
 int FirstTimeFlag = 1;
+int startAdd[3000] ;
+int sizeAdd[3000] ;
+int freeCounter = 0 ;
 void InitializeUHeap()
 {
 	if(FirstTimeFlag)
@@ -62,7 +66,11 @@ void* malloc(uint32 size)
 					counter=0;
 				}
 				if(counter==numOfFrames){
+
 					uint32 start_address = address-(numOfFrames-1)*PAGE_SIZE;
+					startAdd[freeCounter] = start_address ;
+					sizeAdd[freeCounter] = SIZE ;
+					freeCounter++ ;
 					for(uint32 add=start_address;add<=address;add+=PAGE_SIZE){
 						struct FrameInfo *ptr=NULL;
 						sys_allocate_user_mem(add, PAGE_SIZE);
@@ -85,7 +93,22 @@ void free(void* virtual_address)
 {
 	//TODO: [PROJECT'23.MS2 - #11] [2] USER HEAP - free() [User Side]
 	// Write your code here, remove the panic and write your code
-	panic("free() is not implemented yet...!!");
+
+    if(((uint32)virtual_address>=curenv->start)&&((uint32)virtual_address<= curenv->seg_break)){
+    	free_block(virtual_address);
+    }
+    else if(((uint32)virtual_address >= (curenv->limit + PAGE_SIZE)) && ((uint32)virtual_address <= KERNEL_HEAP_MAX)){
+    	for(int i = 0 ; i < freeCounter ; i++)
+    			{
+    				if((void *)startAdd[i] == virtual_address)
+    				{
+						sys_free_user_mem(startAdd[i],sizeAdd[i]);
+    				}
+    			}
+   }else{
+	   panic("kfree() painc");
+   }
+//	panic("free() is not implemented yet...!!");
 }
 
 

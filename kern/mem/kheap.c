@@ -176,10 +176,10 @@ void kfree(void* virtual_address)
 	//refer to the project presentation and documentation for details
 	// Write your code here, remove the panic and write your code
 
-	    if(((uint32)virtual_address>kheap_start)&&((uint32)virtual_address<kheap_hard_limit)){
+	    if(((uint32)virtual_address>=kheap_start)&&((uint32)virtual_address<=kheap_segment_break)){
 	    	free_block(virtual_address);
 	    }
-	    else if(((uint32)virtual_address > (kheap_hard_limit + PAGE_SIZE)) && ((uint32)virtual_address < KERNEL_HEAP_MAX)){
+	    else if(((uint32)virtual_address >= (kheap_hard_limit + PAGE_SIZE)) && ((uint32)virtual_address <= KERNEL_HEAP_MAX)){
 	    	uint32 *ptr_page_table=NULL;
 	    	struct FrameInfo *frame=get_frame_info(ptr_page_directory,(uint32)virtual_address,&ptr_page_table);
 	    	uint32 va = (uint32)virtual_address + PAGE_SIZE * frame->numberOfFrames;
