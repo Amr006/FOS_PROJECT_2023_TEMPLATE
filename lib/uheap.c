@@ -47,27 +47,29 @@ void* malloc(uint32 size)
 	//	panic("malloc() is not implemented yet...!!");
 	if (size <= DYN_ALLOC_MAX_BLOCK_SIZE){
 		return alloc_block_FF(size);
-	}else {
+	}
+	else {
 		unsigned int SIZE = ROUNDUP(size,PAGE_SIZE);
-		uint32 limit = sys_getKlimit()->limit;
+		uint32 limit = sys_getKlimit();
 		int numOfFrames=SIZE/PAGE_SIZE;
 		uint32 va = limit+PAGE_SIZE;
-		uint32 PERM = sys_get_page_premission(sys_getKlimit()->env_page_directory, va);
+		uint32 PERM = sys_get_page_premission(va);
 		if(sys_isUHeapPlacementStrategyFIRSTFIT()){
 			int counter=0;
 			for(uint32 address=va;address<USER_HEAP_MAX;address+=PAGE_SIZE){
-				struct FrameInfo *frame = (struct FrameInfo *)sys_get_frame_info(address);
-				if(frame->references == 0 && ((PERM & PERM_AVAILABLE) != PERM_AVAILABLE)){
+				if(((PERM & PERM_AVAILABLE) != PERM_AVAILABLE)){
 					counter++;
 				}else{
 					counter=0;
 				}
 				if(counter==numOfFrames){
-
+                    uint32 FreeCount = sys_getFreeCounter();
+                    int * startArray =  sys_getStartAddr();
+                    int * startSize =  sys_getStartSize();
 					uint32 start_address = address-(numOfFrames-1)*PAGE_SIZE;
-					sys_getKlimit()->startAdd[sys_getKlimit()->freeCounter] = start_address ;
-					sys_getKlimit()->sizeAdd[sys_getKlimit()->freeCounter] = SIZE ;
-					sys_getKlimit()->freeCounter++ ;
+                    startArray[FreeCount] = start_address;
+					startSize[FreeCount] = SIZE;
+					FreeCount++;
 					for(uint32 add=start_address;add<=address;add+=PAGE_SIZE){
 						struct FrameInfo *ptr=NULL;
 						sys_allocate_user_mem(add, PAGE_SIZE);
@@ -90,21 +92,27 @@ void free(void* virtual_address)
 {
 	//TODO: [PROJECT'23.MS2 - #11] [2] USER HEAP - free() [User Side]
 	// Write your code here, remove the panic and write your code
-	if(((uint32)virtual_address>=sys_getKlimit()->start)&&((uint32)virtual_address<= sys_getKlimit()->seg_break)){
+	uint32 FreeCount = sys_getFreeCounter();
+	int * startArray =  sys_getStartAddr();
+	int * startSize =  sys_getStartSize();
+	uint32 Start = sys_getStart();
+	uint32 SegBreak = sys_getSeg();
+	uint32 limit = sys_getKlimit();
+	if(((uint32)virtual_address>=Start)&&((uint32)virtual_address<= SegBreak)){
     	free_block(virtual_address);
     }
-    else if(((uint32)virtual_address >= (sys_getKlimit()->limit + PAGE_SIZE)) && ((uint32)virtual_address < KERNEL_HEAP_MAX)){
-    	for(int i = 0 ; i <  sys_getKlimit()->freeCounter ; i++)
+    else if(((uint32)virtual_address >= (limit + PAGE_SIZE)) && ((uint32)virtual_address < KERNEL_HEAP_MAX)){
+    	for(int i = 0 ; i <  FreeCount ; i++)
     			{
-    				if((void *)sys_getKlimit()->startAdd[i] == virtual_address)
+    				if((void *)startArray[i] == virtual_address)
     				{
-    					sys_free_user_mem((uint32)virtual_address,  sys_getKlimit()->sizeAdd[i]);
+    					sys_free_user_mem((uint32)virtual_address,  startSize[i]);
     				}
     			}
    }else{
 	   panic("kfree() painc");
    }
-	panic("free() is not implemented yet...!!");
+//	panic("free() is not implemented yet...!!");
 }
 
 

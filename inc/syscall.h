@@ -57,6 +57,11 @@ enum
 	SYS_allocate_user_mem,
 	SYS_free_user_mem,
     SYS_getKlimit,
+	SYS_getStart,
+	SYS_getSeg,
+	SYS_getStartAddr,
+	SYS_getStartSize,
+	SYS_getFreeCounter,
 	// sys_call to get frame_info for malloc at user side
 	SYS_get_frame_info,
 	SYS_get_page_premission,
