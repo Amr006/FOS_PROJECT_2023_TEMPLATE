@@ -111,6 +111,10 @@ struct Env {
 	uint32 start;
 	uint32 limit;
 	uint32 seg_break;
+	// ===============
+	 	 // arr to store va and it's size
+	int va_Size[3000];
+
 	//==================================================================================
 
 	//================

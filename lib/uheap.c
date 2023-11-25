@@ -5,11 +5,8 @@
 //==================================================================================//
 //============================== GIVEN FUNCTIONS ===================================//
 //==================================================================================//
-int arr_CheckFree[3000] = {1};
+//int arr_CheckFree[3000] = {1};
 int FirstTimeFlag = 1;
-int startAdd[3000] ;
-int sizeAdd[3000] ;
-int freeCounter = 0 ;
 void InitializeUHeap()
 {
 	if(FirstTimeFlag)
@@ -55,22 +52,23 @@ void* malloc(uint32 size)
 		uint32 limit = sys_getKlimit()->limit;
 		int numOfFrames=SIZE/PAGE_SIZE;
 		uint32 va = limit+PAGE_SIZE;
+		uint32 PERM = sys_get_page_premission(sys_getKlimit()->env_page_directory, va);
 		if(sys_isUHeapPlacementStrategyFIRSTFIT()){
 			int counter=0;
 			for(uint32 address=va;address<USER_HEAP_MAX;address+=PAGE_SIZE){
 				struct FrameInfo *frame = (struct FrameInfo *)sys_get_frame_info(address);
-				if(frame->references == 0 && arr_CheckFree[address] == 1){
+				if(frame->references == 0 && ((PERM & PERM_AVAILABLE) != PERM_AVAILABLE)){
 					counter++;
-					arr_CheckFree[address] = 0;
 				}else{
 					counter=0;
 				}
 				if(counter==numOfFrames){
 
 					uint32 start_address = address-(numOfFrames-1)*PAGE_SIZE;
-					startAdd[freeCounter] = start_address ;
-					sizeAdd[freeCounter] = SIZE ;
-					freeCounter++ ;
+					sys_getKlimit()->va_Size[va] = (address - start_address);
+//					startAdd[freeCounter] = start_address ;
+//					sizeAdd[freeCounter] = SIZE ;
+//					freeCounter++ ;
 					for(uint32 add=start_address;add<=address;add+=PAGE_SIZE){
 						struct FrameInfo *ptr=NULL;
 						sys_allocate_user_mem(add, PAGE_SIZE);
@@ -98,17 +96,11 @@ void free(void* virtual_address)
     	free_block(virtual_address);
     }
     else if(((uint32)virtual_address >= (en->limit + PAGE_SIZE)) && ((uint32)virtual_address <= KERNEL_HEAP_MAX)){
-    	for(int i = 0 ; i < freeCounter ; i++)
-    			{
-    				if((void *)startAdd[i] == virtual_address)
-    				{
-						sys_free_user_mem(startAdd[i],sizeAdd[i]);
-    				}
-    			}
+		sys_free_user_mem((uint32)virtual_address,(uint32)(sys_getKlimit()->va_Size[(uint32)virtual_address]));
    }else{
 	   panic("kfree() painc");
    }
-//	panic("free() is not implemented yet...!!");
+	panic("free() is not implemented yet...!!");
 }
 
 

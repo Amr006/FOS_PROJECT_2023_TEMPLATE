@@ -59,6 +59,9 @@ enum
     SYS_getKlimit,
 	// sys_call to get frame_info for malloc at user side
 	SYS_get_frame_info,
+	SYS_get_page_premission,
+//	SYS_get_perm_available,
+//	SYS_get_va_size_arr,
 	//=====================================================================
 	NSYSCALLS
 

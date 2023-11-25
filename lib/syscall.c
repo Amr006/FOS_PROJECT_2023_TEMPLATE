@@ -363,3 +363,13 @@ struct FrameInfo * sys_get_frame_info(uint32 virtual_address){
 struct Env * sys_getKlimit(){
     return (struct Env *)syscall(SYS_getKlimit, 0,0,0,0,0);
 }
+// inline int pt_get_page_permissions(uint32* page_directory, uint32 virtual_address )
+inline int sys_get_page_premission(uint32 * page_directory, uint32 virtual_address){
+	return (int)syscall(SYS_get_page_premission, (uint32)page_directory,virtual_address,0,0,0);
+}
+//int sys_get_perm_available(){
+//    return (int)syscall(SYS_get_perm_available, 0,0,0,0,0);
+//}
+//int sys_get_va_Size_arr(){
+//	return (int)syscall(SYS_get_va_size_arr,0,0,0,0,0);
+//}
