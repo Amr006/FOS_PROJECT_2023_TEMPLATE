@@ -65,10 +65,9 @@ void* malloc(uint32 size)
 				if(counter==numOfFrames){
 
 					uint32 start_address = address-(numOfFrames-1)*PAGE_SIZE;
-					sys_getKlimit()->va_Size[va] = (address - start_address);
-//					startAdd[freeCounter] = start_address ;
-//					sizeAdd[freeCounter] = SIZE ;
-//					freeCounter++ ;
+					sys_getKlimit()->startAdd[sys_getKlimit()->freeCounter] = start_address ;
+					sys_getKlimit()->sizeAdd[sys_getKlimit()->freeCounter] = SIZE ;
+					sys_getKlimit()->freeCounter++ ;
 					for(uint32 add=start_address;add<=address;add+=PAGE_SIZE){
 						struct FrameInfo *ptr=NULL;
 						sys_allocate_user_mem(add, PAGE_SIZE);
@@ -91,12 +90,17 @@ void free(void* virtual_address)
 {
 	//TODO: [PROJECT'23.MS2 - #11] [2] USER HEAP - free() [User Side]
 	// Write your code here, remove the panic and write your code
-	struct Env* en = sys_getKlimit();
-	if(((uint32)virtual_address>=en->start)&&((uint32)virtual_address<= en->seg_break)){
+	if(((uint32)virtual_address>=sys_getKlimit()->start)&&((uint32)virtual_address<= sys_getKlimit()->seg_break)){
     	free_block(virtual_address);
     }
-    else if(((uint32)virtual_address >= (en->limit + PAGE_SIZE)) && ((uint32)virtual_address <= KERNEL_HEAP_MAX)){
-		sys_free_user_mem((uint32)virtual_address,(uint32)(sys_getKlimit()->va_Size[(uint32)virtual_address]));
+    else if(((uint32)virtual_address >= (sys_getKlimit()->limit + PAGE_SIZE)) && ((uint32)virtual_address < KERNEL_HEAP_MAX)){
+    	for(int i = 0 ; i <  sys_getKlimit()->freeCounter ; i++)
+    			{
+    				if((void *)sys_getKlimit()->startAdd[i] == virtual_address)
+    				{
+    					sys_free_user_mem((uint32)virtual_address,  sys_getKlimit()->sizeAdd[i]);
+    				}
+    			}
    }else{
 	   panic("kfree() painc");
    }

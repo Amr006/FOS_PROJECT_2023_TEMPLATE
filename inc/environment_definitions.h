@@ -112,8 +112,14 @@ struct Env {
 	uint32 limit;
 	uint32 seg_break;
 	// ===============
-	 	 // arr to store va and it's size
-	int va_Size[3000];
+	 /*
+	  * startAdd[freeCounter] = start_address ;
+						sizeAdd[freeCounter] = SIZE ;
+						freeCounter++ ;
+	  */
+	int freeCounter;
+	int startAdd[3000];
+	int sizeAdd[3000];
 
 	//==================================================================================
 
