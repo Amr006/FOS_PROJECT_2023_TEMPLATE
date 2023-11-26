@@ -17,6 +17,7 @@
 #include <kern/tests/utilities.h>
 #include <kern/tests/test_working_set.h>
 #include <inc/mmu.h>
+
 extern uint8 bypassInstrLength ;
 
 /*******************************/
@@ -569,8 +570,8 @@ int * sys_getStartSize()
 	return (int *) curenv->sizeAdd;
 }
 // inline int pt_get_page_permissions(uint32* page_directory, uint32 virtual_address )
-int sys_get_page_premission(uint32 virtual_address) {
-    return pt_get_page_permissions(curenv->env_page_directory ,virtual_address);
+uint32 sys_get_page_premission(uint32 virtual_address) {
+    return pt_get_page_permissions(ptr_page_directory ,virtual_address);
 }
 //int sys_get_va_Size(){
 //	return curenv->va_Size;
@@ -601,8 +602,8 @@ uint32 thesizeofblock=a2;
 //		return (int)(sys_get_perm_available());
 //	case SYS_get_va_size_arr :
 //		return (sys_get_va_Size());
-	case SYS_get_page_premission :
-		return (sys_get_page_premission((uint32)a2));
+	case SYS_get_page_premission:
+		return (int)(sys_get_page_premission)((uint32)a2);
 		break;
 	case SYS_get_frame_info:
 		return (uint32)(sys_get_frame_info)(a1);

@@ -45,41 +45,49 @@ void* malloc(uint32 size)
 	//TODO: [PROJECT'23.MS2 - #09] [2] USER HEAP - malloc() [User Side]
 	// Write your code here, remove the panic and write your code
 	//	panic("malloc() is not implemented yet...!!");
+
 	if (size <= DYN_ALLOC_MAX_BLOCK_SIZE){
 		return alloc_block_FF(size);
 	}
 	else {
 		unsigned int SIZE = ROUNDUP(size,PAGE_SIZE);
-		uint32 limit = sys_getKlimit();
+		cprintf("the size is %u\n", SIZE);
+//		uint32 limit = sys_getKlimit();
+		uint32 limit = USER_HEAP_START + DYN_ALLOC_MAX_SIZE;
 		int numOfFrames=SIZE/PAGE_SIZE;
+		cprintf("the number of frames are %d\n", numOfFrames);
 		uint32 va = limit+PAGE_SIZE;
-		uint32 PERM = sys_get_page_premission(va);
+		cprintf("the start address of the page alloc is %u\n", va);
 		if(sys_isUHeapPlacementStrategyFIRSTFIT()){
 			int counter=0;
 			for(uint32 address=va;address<USER_HEAP_MAX;address+=PAGE_SIZE){
+			    uint32 PERM = sys_get_page_premission(address);
 				if(((PERM & PERM_AVAILABLE) != PERM_AVAILABLE)){
+					cprintf("accepted address: %u\n", address);
 					counter++;
 				}else{
 					counter=0;
 				}
 				if(counter==numOfFrames){
-                    uint32 FreeCount = sys_getFreeCounter();
-                    int * startArray =  sys_getStartAddr();
-                    int * startSize =  sys_getStartSize();
-					uint32 start_address = address-(numOfFrames-1)*PAGE_SIZE;
+                    uint32 FreeCount = myEnv->freeCounter;
+                    volatile int * startArray =  myEnv->startAdd;
+                    volatile int * startSize =  myEnv->sizeAdd;
+					uint32 start_address = address-(((numOfFrames)*PAGE_SIZE));
                     startArray[FreeCount] = start_address;
 					startSize[FreeCount] = SIZE;
 					FreeCount++;
 					for(uint32 add=start_address;add<=address;add+=PAGE_SIZE){
 						struct FrameInfo *ptr=NULL;
+						cprintf("the address marked is: %u", add);
 						sys_allocate_user_mem(add, PAGE_SIZE);
 					}
 					return (void*)start_address;
 				}
 			}
 		}
+
 	}
-	return NULL;
+	return (void*) (USER_HEAP_START + DYN_ALLOC_MAX_SIZE + PAGE_SIZE);
 	//Use sys_isUHeapPlacementStrategyFIRSTFIT() and	sys_isUHeapPlacementStrategyBESTFIT()
 	//to check the current strategy
 
@@ -92,26 +100,26 @@ void free(void* virtual_address)
 {
 	//TODO: [PROJECT'23.MS2 - #11] [2] USER HEAP - free() [User Side]
 	// Write your code here, remove the panic and write your code
-	uint32 FreeCount = sys_getFreeCounter();
-	int * startArray =  sys_getStartAddr();
-	int * startSize =  sys_getStartSize();
-	uint32 Start = sys_getStart();
-	uint32 SegBreak = sys_getSeg();
-	uint32 limit = sys_getKlimit();
-	if(((uint32)virtual_address>=Start)&&((uint32)virtual_address<= SegBreak)){
-    	free_block(virtual_address);
-    }
-    else if(((uint32)virtual_address >= (limit + PAGE_SIZE)) && ((uint32)virtual_address < KERNEL_HEAP_MAX)){
-    	for(int i = 0 ; i <  FreeCount ; i++)
-    			{
-    				if((void *)startArray[i] == virtual_address)
-    				{
-    					sys_free_user_mem((uint32)virtual_address,  startSize[i]);
-    				}
-    			}
-   }else{
-	   panic("kfree() painc");
-   }
+//	uint32 FreeCount = sys_getFreeCounter();
+//	int * startArray =  sys_getStartAddr();
+//	int * startSize =  sys_getStartSize();
+//	uint32 Start = sys_getStart();
+//	uint32 SegBreak = sys_getSeg();
+//	uint32 limit = sys_getKlimit();
+//	if(((uint32)virtual_address>=Start)&&((uint32)virtual_address<= SegBreak)){
+//    	free_block(virtual_address);
+//    }
+//    else if(((uint32)virtual_address >= (limit + PAGE_SIZE)) && ((uint32)virtual_address < KERNEL_HEAP_MAX)){
+//    	for(int i = 0 ; i <  FreeCount ; i++)
+//    			{
+//    				if((void *)startArray[i] == virtual_address)
+//    				{
+//    					sys_free_user_mem((uint32)virtual_address,  startSize[i]);
+//    				}
+//    			}
+//   }else{
+//	   panic("kfree() painc");
+//   }
 //	panic("free() is not implemented yet...!!");
 }
 

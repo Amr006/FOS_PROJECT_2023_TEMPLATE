@@ -337,8 +337,7 @@ void sys_allocate_chunk(uint32 virtual_address, uint32 size, uint32 perms)
 //TODO: [PROJECT'23.MS1 - #3] [2] SYSTEM CALLS - Implement these system calls
 void* sys_sbrk(int increment)
 {
-	syscall(SYS_sbrk, increment, 0, 0, 0, 0);
-	return(void*) -1;
+	return (void *) syscall(SYS_sbrk, increment, 0, 0, 0, 0);
 	//panic("not implemented yet");
 }
 
@@ -385,7 +384,7 @@ int * sys_getStartSize(){
 }
 // inline int pt_get_page_permissions(uint32* page_directory, uint32 virtual_address )
 int sys_get_page_premission(uint32 virtual_address){
-	return (int)syscall(SYS_get_page_premission,virtual_address,0,0,0,0);
+	return syscall(SYS_get_page_premission,(uint32)virtual_address,0,0,0,0);
 }
 //int sys_get_perm_available(){
 //    return (int)syscall(SYS_get_perm_available, 0,0,0,0,0);
