@@ -122,6 +122,7 @@ void *alloc_block_FF(uint32 size)
 	if(size==0){
 		return NULL;
 	}
+	cprintf("amora\n\n\n");
 	if(!is_initialized){
 		uint32 required_size = size + sizeOfMetaData();
 		uint32 da_start = (uint32)sbrk(required_size);
@@ -163,9 +164,11 @@ void *alloc_block_FF(uint32 size)
 	if(allocated == 0){
 		void* res = sbrk(reqsize);
 		if(res== (void *)-1){
+			cprintf("amora2\n\n\n");
 			return NULL;
 		}
 		else{
+			cprintf("amora3\n\n\n");
 			struct BlockMetaData *metadata = (struct BlockMetaData *)res;
 			metadata->size=reqsize;
 			metadata->is_free=0;

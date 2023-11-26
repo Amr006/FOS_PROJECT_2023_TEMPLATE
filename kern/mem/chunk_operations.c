@@ -130,7 +130,7 @@ void allocate_user_mem(struct Env* e, uint32 virtual_address, uint32 size)
 	if(ptr_page_table == NULL){
 		ptr_page_table = create_page_table(e->env_page_directory, virtual_address);
 	}
-	for(uint32 va = virtual_address; va <= (va + size); va += PAGE_SIZE){
+	for(uint32 va = virtual_address; va <= (virtual_address + size); va += PAGE_SIZE){
 //		page_table_entry = ptr_page_table[PTX(virtual_address)]; // get the page table entry
 //		page_table_entry = page_table_entry | PERM_AVAILABLE;
 		pt_set_page_permissions(e->disk_env_pgdir, va, PERM_AVAILABLE, 0);

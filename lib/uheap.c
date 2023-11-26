@@ -60,6 +60,7 @@ void* malloc(uint32 size)
 		cprintf("the start address of the page alloc is %u\n", va);
 		if(sys_isUHeapPlacementStrategyFIRSTFIT()){
 			int counter=0;
+			cprintf("amora1\n");
 			for(uint32 address=va;address<USER_HEAP_MAX;address+=PAGE_SIZE){
 			    uint32 PERM = sys_get_page_premission(address);
 				if(((PERM & PERM_AVAILABLE) != PERM_AVAILABLE)){

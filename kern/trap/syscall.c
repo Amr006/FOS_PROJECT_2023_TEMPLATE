@@ -529,6 +529,34 @@ void* sys_sbrk(uint32 increment)
 				return (void *)-1;
 			}
 		}
+//	struct Env* env = curenv; //the current running Environment to adjust its break limit
+//		if(increment==0)
+//		{
+//			return (void *)env->seg_break;
+//		}
+//		else if(increment > 0)
+//		{
+//			uint32 new_break = ROUNDUP(increment+env->seg_break,PAGE_SIZE);
+//
+//			if(new_break > env->limit)
+//			{
+//				return (void*)-1;
+//			}
+//			else
+//			{
+//
+//				uint32 np = ROUNDUP(increment,PAGE_SIZE) / PAGE_SIZE;
+//				uint32 old = env->seg_break;
+//				uint32 iterator = env->seg_break;
+//				allocate_user_mem(env,old,ROUNDUP(increment,PAGE_SIZE));
+//
+//				env->seg_break = new_break;
+//				return (void*)old;
+//			}
+//		}
+//		else{
+//			return (void*)-1;
+//		}
 }
 
 // FUNCTION MADE BY MORE123 && FELFEL TEAM006 2023 TO GET GET_FRAME_INFO FOR USER SIDE MALLOC
