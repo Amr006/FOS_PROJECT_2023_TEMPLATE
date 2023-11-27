@@ -568,35 +568,35 @@ struct FrameInfo *sys_get_frame_info(uint32 virtual_address){
 }
 
 
-uint32 sys_getKlimit()
-{
-	return curenv->limit;
-}
-
-uint32 sys_getStart()
-{
-	return curenv->start;
-}
-
-uint32 sys_getSeg()
-{
-	return curenv->seg_break;
-}
-
-uint32 sys_getFreeCounter()
-{
-	return curenv->freeCounter;
-}
-
-int * sys_getStartAddr()
-{
-	return (int *) (curenv->startAdd);
-}
-
-int * sys_getStartSize()
-{
-	return (int *) curenv->sizeAdd;
-}
+//uint32 sys_getKlimit()
+//{
+//	return curenv->limit;
+//}
+//
+//uint32 sys_getStart()
+//{
+//	return curenv->start;
+//}
+//
+//uint32 sys_getSeg()
+//{
+//	return curenv->seg_break;
+//}
+//
+//uint32 sys_getFreeCounter()
+//{
+//	return curenv->freeCounter;
+//}
+//
+//int * sys_getStartAddr()
+//{
+//	return (int *) (curenv->startAdd);
+//}
+//
+//int * sys_getStartSize()
+//{
+//	return (int *) curenv->sizeAdd;
+//}
 // inline int pt_get_page_permissions(uint32* page_directory, uint32 virtual_address )
 uint32 sys_get_page_premission(uint32 virtual_address) {
     return pt_get_page_permissions(ptr_page_directory ,virtual_address);
@@ -636,24 +636,24 @@ uint32 thesizeofblock=a2;
 	case SYS_get_frame_info:
 		return (uint32)(sys_get_frame_info)(a1);
 		break;
-	case SYS_getKlimit:
-		return (uint32)(sys_getKlimit);
-		break;
-	case SYS_getStart:
-		return (uint32)(sys_getStart);
-		break;
-	case SYS_getStartAddr:
-		return (uint32 )(sys_getStartAddr);
-		break;
-	case SYS_getSeg:
-		return (uint32)(sys_getSeg);
-		break;
-	case SYS_getFreeCounter:
-		return (uint32)(sys_getFreeCounter);
-		break;
-	case SYS_getStartSize:
-		return (uint32)(sys_getStartSize);
-		break;
+//	case SYS_getKlimit:
+//		return (uint32)(sys_getKlimit);
+//		break;
+//	case SYS_getStart:
+//		return (uint32)(sys_getStart);
+//		break;
+//	case SYS_getStartAddr:
+//		return (uint32 )(sys_getStartAddr);
+//		break;
+//	case SYS_getSeg:
+//		return (uint32)(sys_getSeg);
+//		break;
+//	case SYS_getFreeCounter:
+//		return (uint32)(sys_getFreeCounter);
+//		break;
+//	case SYS_getStartSize:
+//		return (uint32)(sys_getStartSize);
+//		break;
 	case SYS_sbrk:
 		return (uint32) (sys_sbrk(a1));
 		break;

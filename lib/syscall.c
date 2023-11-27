@@ -359,29 +359,29 @@ struct FrameInfo * sys_get_frame_info(uint32 virtual_address){
 	return (struct FrameInfo *)syscall(SYS_get_frame_info, virtual_address, 0, 0, 0, 0);
 }
 
-uint32 sys_getKlimit(){
-    return (uint32) syscall(SYS_getKlimit, 0,0,0,0,0);
-}
-
-uint32 sys_getStart(){
-    return (uint32) syscall(SYS_getStart, 0,0,0,0,0);
-}
-
-uint32 sys_getSeg(){
-    return (uint32) syscall(SYS_getSeg, 0,0,0,0,0);
-}
-
-int * sys_getStartAddr(){
-    return (int *) syscall(SYS_getStartAddr, 0,0,0,0,0);
-}
-
-uint32 sys_getFreeCounter(){
-    return (uint32) syscall(SYS_getFreeCounter, 0,0,0,0,0);
-}
-
-int * sys_getStartSize(){
-    return (int *) syscall(SYS_getStartSize, 0,0,0,0,0);
-}
+//uint32 sys_getKlimit(){
+//    return (uint32) syscall(SYS_getKlimit, 0,0,0,0,0);
+//}
+//
+//uint32 sys_getStart(){
+//    return (uint32) syscall(SYS_getStart, 0,0,0,0,0);
+//}
+//
+//uint32 sys_getSeg(){
+//    return (uint32) syscall(SYS_getSeg, 0,0,0,0,0);
+//}
+//
+//int * sys_getStartAddr(){
+//    return (int *) syscall(SYS_getStartAddr, 0,0,0,0,0);
+//}
+//
+//uint32 sys_getFreeCounter(){
+//    return (uint32) syscall(SYS_getFreeCounter, 0,0,0,0,0);
+//}
+//
+//int * sys_getStartSize(){
+//    return (int *) syscall(SYS_getStartSize, 0,0,0,0,0);
+//}
 // inline int pt_get_page_permissions(uint32* page_directory, uint32 virtual_address )
 int sys_get_page_premission(uint32 virtual_address){
 	return syscall(SYS_get_page_premission,(uint32)virtual_address,0,0,0,0);
