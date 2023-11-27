@@ -46,43 +46,37 @@ void* malloc(uint32 size)
 	// Write your code here, remove the panic and write your code
 	//	panic("malloc() is not implemented yet...!!");
 
-	if (size <= DYN_ALLOC_MAX_BLOCK_SIZE){
-		cprintf("test dyn alloc \n\n\n");
-		alloc_block_FF(size);
-		return NULL;
-}
-	else {
-		unsigned int SIZE = ROUNDUP(size,PAGE_SIZE);
-//		cprintf("the size is %u\n", SIZE);
-//		uint32 limit = sys_getKlimit();
+//	if (size <= DYN_ALLOC_MAX_BLOCK_SIZE){
+//		cprintf("hello\n");
+//		return alloc_block_FF(size);
+//	}
+
+
+
+		size = ROUNDUP(size,PAGE_SIZE);
 		uint32 limit = USER_HEAP_START + DYN_ALLOC_MAX_SIZE;
-		int numOfFrames=SIZE/PAGE_SIZE;
-//		cprintf("the number of frames are %d\n", numOfFrames);
+		int numOfFrames=size/PAGE_SIZE;
 		uint32 va = limit+PAGE_SIZE;
-//		cprintf("the start address of the page alloc is %u\n", va);
 		if(sys_isUHeapPlacementStrategyFIRSTFIT()){
 			int counter=0;
-//			cprintf("amora1\n");
 			for(uint32 address=va;address<USER_HEAP_MAX;address+=PAGE_SIZE){
 			    uint32 PERM = sys_get_page_premission(address);
-				if(((PERM & PERM_AVAILABLE) != PERM_AVAILABLE)){
-//					cprintf("accepted address: %u\n", address);
+				if(!(PERM & PERM_TEST)){
+					cprintf("accepted address: %u\n", address);
 					counter++;
 				}else{
 					counter=0;
 				}
 				if(counter==numOfFrames){
-					uint32 start_address = address-(((numOfFrames)*PAGE_SIZE));
+					uint32 start_address = address-(numOfFrames)*PAGE_SIZE;
 					uint32 size = numOfFrames * PAGE_SIZE;
 					sys_allocate_user_mem(start_address, size);
 					return (void*)start_address;
 				}
 			}
 		}
-	}
-	return (void*) (USER_HEAP_START + DYN_ALLOC_MAX_SIZE + PAGE_SIZE);
-	//Use sys_isUHeapPlacementStrategyFIRSTFIT() and	sys_isUHeapPlacementStrategyBESTFIT()
-	//to check the current strategy
+    cprintf("hello\n");
+	return NULL;
 
 }
 
@@ -94,24 +88,23 @@ void free(void* virtual_address)
 	//TODO: [PROJECT'23.MS2 - #11] [2] USER HEAP - free() [User Side]
 	// Write your code here, remove the panic and write your code
 
-	uint32 size = 0;
-
-	if(((uint32)virtual_address>=USER_HEAP_START)&&((uint32)virtual_address<= USER_HEAP_START + DYN_ALLOC_MAX_SIZE)){
-    	free_block(virtual_address);
-    }
-    else{
-    	for (uint32 va = virtual_address ; va < USER_HEAP_MAX; va += PAGE_SIZE){
-    		if (sys_get_page_premission(va) == (sys_get_page_premission(va) & PERM_AVAILABLE)){
-					size = (va - virtual_address);
-					sys_free_user_mem(va, size);
-					break;
-    		}
-    	}
-
-   }else{
-	   panic("kfree() painc");
-   }
-//	panic("free() is not implemented yet...!!");
+//	uint32 size = 0;
+//
+//		if(((uint32)virtual_address>=USER_HEAP_START)&&((uint32)virtual_address<= USER_HEAP_START + DYN_ALLOC_MAX_SIZE)){
+//	    	free_block(virtual_address);
+//	    }
+//	    else if ((uint32)virtual_address < USER_HEAP_MAX && (uint32)virtual_address >= (USER_HEAP_START + DYN_ALLOC_MAX_SIZE + PAGE_SIZE)){
+//	    	for (uint32 va = (uint32)virtual_address ; va < USER_HEAP_MAX; va += PAGE_SIZE){
+//	    		if (sys_get_page_premission(va) == (sys_get_page_premission(va) & PERM_TEST)){
+//						size = (va - PAGE_SIZE) -(uint32)virtual_address;
+//						sys_free_user_mem(va, size);
+//						break;
+//	    		}
+//	    	}
+//
+//	   }else{
+//		   panic("kfree() painc");
+//	   }
 }
 
 

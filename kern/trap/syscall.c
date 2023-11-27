@@ -509,19 +509,26 @@ void* sys_sbrk(uint32 increment)
 
 	uint32 old_Break = env->seg_break;
 			if (increment > 0 ){
+
 					env->seg_break += ROUNDUP(increment, PAGE_SIZE);
 			env->seg_break += increment;
-					allocate_user_mem(env, old_Break, increment);
-					if(env->seg_break < env->limit)
-					{
-						return (void *)old_Break;
-					}else{
-						return (void *)-1;
-					}
+			if(env->seg_break < env->limit)
+			{
+									return (void *)old_Break;
+			}else{
+									return (void *)-1;
+			}
+				for(uint32 i=ROUNDUP(old_Break,PAGE_SIZE);i<env->seg_break;i+=PAGE_SIZE){
+					struct FrameInfo *ptr=NULL;
+					int ret = allocate_frame(&ptr);
+				    ret = map_frame(ptr_page_directory,ptr,i,PERM_WRITEABLE);
+				}
+
 			}
 		else if(increment == 0){
 			return (void *)env->seg_break;
 		}else{
+			cprintf("hello\n");
 			unsigned int SIZE = increment;
 			uint32 new_seg_break = env->seg_break - SIZE;
 			for (uint32 va = env->seg_break; va >= new_seg_break;va--){
@@ -612,7 +619,7 @@ uint32 sys_getKlimit()
 //}
 // inline int pt_get_page_permissions(uint32* page_directory, uint32 virtual_address )
 uint32 sys_get_page_premission(uint32 virtual_address) {
-    return pt_get_page_permissions(ptr_page_directory ,virtual_address);
+    return pt_get_page_permissions(curenv->env_page_directory,virtual_address);
 }
 //int sys_get_va_Size(){
 //	return curenv->va_Size;

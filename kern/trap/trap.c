@@ -383,12 +383,11 @@ void fault_handler(struct Trapframe *tf)
 			  if ((perm & PERM_PRESENT) && !(perm & PERM_WRITEABLE)){
 			                sched_kill_env(faulted_env->env_id);}
 			  //kernel checking
-			  else if(fault_va>=USER_LIMIT){
+			  if((perm & PERM_USER)&&(perm & PERM_PRESENT)){
 			                sched_kill_env(faulted_env->env_id);}
 			  //the unmarked places
-			  else if((fault_va<USER_HEAP_MAX) && (fault_va>=curenv->limit + PAGE_SIZE) && !(perm & PERM_AVAILABLE))
+			  if((fault_va<USER_HEAP_MAX) && (fault_va>=curenv->limit + PAGE_SIZE) && !(perm & PERM_TEST))
 			  {
-				  cprintf("ayoooooooooooo\n\n");
 			      sched_kill_env(faulted_env->env_id);
 			  }
 			/*202 */

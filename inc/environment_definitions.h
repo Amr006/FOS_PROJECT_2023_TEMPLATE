@@ -117,9 +117,6 @@ struct Env {
 						sizeAdd[freeCounter] = SIZE ;
 						freeCounter++ ;
 	  */
-	int freeCounter;
-	int startAdd[3000];
-	int sizeAdd[3000];
 
 	//==================================================================================
 

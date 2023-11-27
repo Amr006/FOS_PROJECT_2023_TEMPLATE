@@ -133,7 +133,7 @@ void allocate_user_mem(struct Env* e, uint32 virtual_address, uint32 size)
 	for(uint32 va = virtual_address; va <= (virtual_address + size); va += PAGE_SIZE){
 //		page_table_entry = ptr_page_table[PTX(virtual_address)]; // get the page table entry
 //		page_table_entry = page_table_entry | PERM_AVAILABLE;
-		pt_set_page_permissions(e->disk_env_pgdir, va, PERM_AVAILABLE, 0);
+		pt_set_page_permissions(e->disk_env_pgdir, va, PERM_TEST, 0);
 	}
 
 	// Write your code here, remove the panic and write your code
@@ -157,7 +157,7 @@ void free_user_mem(struct Env* e, uint32 virtual_address, uint32 size)
 
 	//TODO: [PROJECT'23.MS2 - BONUS#2] [2] USER HEAP - free_user_mem() IN O(1): removing page from WS List instead of searching the entire list
 	for (uint32 va = virtual_address; va <= (va + size); va += PAGE_SIZE){
-		pt_set_page_permissions(e->disk_env_pgdir, va, 0 , PERM_AVAILABLE);
+		pt_set_page_permissions(e->disk_env_pgdir, va, 0 , PERM_TEST);
 		pf_remove_env_page(e, va);
 		env_page_ws_invalidate(e, va);
 	}
