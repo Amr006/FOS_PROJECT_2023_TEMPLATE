@@ -122,23 +122,22 @@ void env_page_ws_print(struct Env *e)
 			char isUsed= ((perm&PERM_USED) ? 1 : 0);
 			char isBuffered= ((perm&PERM_BUFFERED) ? 1 : 0);
 
-			cprintf("%d: %x",i, virtual_address);
-
+//			cprintf("%d: %x",i, virtual_address);
 			//2021
-			cprintf(", used= %d, modified= %d, buffered= %d, time stamp= %x, sweeps_cnt= %d",
-					isUsed, isModified, isBuffered, time_stamp, wse->sweeps_counter) ;
+//			cprintf(", used= %d, modified= %d, buffered= %d, time stamp= %x, sweeps_cnt= %d",
+//					isUsed, isModified, isBuffered, time_stamp, wse->sweeps_counter) ;
 
 			if(wse == e->page_last_WS_element)
 			{
-				cprintf(" <--");
+//				cprintf(" <--");
 			}
-			cprintf("\n");
+//			cprintf("\n");
 			i++;
 		}
-		for (; i < e->page_WS_max_size; ++i)
-		{
-			cprintf("EMPTY LOCATION");
-		}
+//		for (; i < e->page_WS_max_size; ++i)
+//		{
+//			cprintf("EMPTY LOCATION");
+//		}
 	}
 }
 #else
@@ -224,12 +223,12 @@ void env_page_ws_print(struct Env *e)
 		{
 			if (e->ptr_pageWorkingSet[i].empty)
 			{
-				cprintf("EMPTY LOCATION");
+//				cprintf("EMPTY LOCATION");
 				if(i==e->page_last_WS_index )
 				{
-					cprintf("		<--");
+//					cprintf("		<--");
 				}
-				cprintf("\n");
+//				cprintf("\n");
 				continue;
 			}
 			uint32 virtual_address = e->ptr_pageWorkingSet[i].virtual_address;
@@ -266,23 +265,23 @@ void env_table_ws_print(struct Env *e)
 	{
 		if (e->__ptr_tws[i].empty)
 		{
-			cprintf("EMPTY LOCATION");
+//			cprintf("EMPTY LOCATION");
 			if(i==e->table_last_WS_index )
 			{
-				cprintf("		<--");
+//				cprintf("		<--");
 			}
-			cprintf("\n");
+//			cprintf("\n");
 			continue;
 		}
 		uint32 virtual_address = e->__ptr_tws[i].virtual_address;
-		cprintf("env address at %d = %x",i, e->__ptr_tws[i].virtual_address);
+//		cprintf("env address at %d = %x",i, e->__ptr_tws[i].virtual_address);
 
-		cprintf(", used bit = %d, time stamp = %d", pd_is_table_used(e->env_page_directory, virtual_address), e->__ptr_tws[i].time_stamp);
+//		cprintf(", used bit = %d, time stamp = %d", pd_is_table_used(e->env_page_directory, virtual_address), e->__ptr_tws[i].time_stamp);
 		if(i==e->table_last_WS_index )
 		{
-			cprintf(" <--");
+//			cprintf(" <--");
 		}
-		cprintf("\n");
+//		cprintf("\n");
 	}
 }
 

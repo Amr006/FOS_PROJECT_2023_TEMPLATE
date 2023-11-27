@@ -509,33 +509,25 @@ void* sys_sbrk(uint32 increment)
 
 	uint32 old_Break = env->seg_break;
 			if (increment > 0 ){
-
-					env->seg_break += ROUNDUP(increment, PAGE_SIZE);
-			env->seg_break += increment;
-			if(env->seg_break < env->limit)
-			{
-									return (void *)old_Break;
-			}else{
-									return (void *)-1;
-			}
-				for(uint32 i=ROUNDUP(old_Break,PAGE_SIZE);i<env->seg_break;i+=PAGE_SIZE){
-					struct FrameInfo *ptr=NULL;
-					int ret = allocate_frame(&ptr);
-				    ret = map_frame(ptr_page_directory,ptr,i,PERM_WRITEABLE);
-				}
-
+					if (env->seg_break + ROUNDUP(increment, PAGE_SIZE) > env->limit){
+						return (void *)-1;
+					}else if(env->seg_break < env->limit)
+					{
+						env->seg_break += ROUNDUP(increment, PAGE_SIZE);
+						ROUNDUP(env->seg_break , PAGE_SIZE);
+						return (void *)old_Break;
+					}
 			}
 		else if(increment == 0){
 			return (void *)env->seg_break;
 		}else{
-			cprintf("hello\n");
 			unsigned int SIZE = increment;
 			uint32 new_seg_break = env->seg_break - SIZE;
 			for (uint32 va = env->seg_break; va >= new_seg_break;va--){
 				if (va % PAGE_SIZE == 0 ){
 								uint32 perm = pt_get_page_permissions(env->env_page_directory, env->seg_break);
-								if (!(perm & PERM_AVAILABLE)){
-									pt_set_page_permissions(env->env_page_directory, env->seg_break, 0, PERM_AVAILABLE);
+								if (!(perm & PERM_TEST)){
+									pt_set_page_permissions(env->env_page_directory, env->seg_break, 0, PERM_TEST);
 								}
 								unmap_frame(env->env_page_directory, env->seg_break);
 								pf_remove_env_page(env, va);
@@ -549,34 +541,7 @@ void* sys_sbrk(uint32 increment)
 				return (void *)-1;
 			}
 		}
-//	struct Env* env = curenv; //the current running Environment to adjust its break limit
-//		if(increment==0)
-//		{
-//			return (void *)env->seg_break;
-//		}
-//		else if(increment > 0)
-//		{
-//			uint32 new_break = ROUNDUP(increment+env->seg_break,PAGE_SIZE);
-//
-//			if(new_break > env->limit)
-//			{
-//				return (void*)-1;
-//			}
-//			else
-//			{
-//
-//				uint32 np = ROUNDUP(increment,PAGE_SIZE) / PAGE_SIZE;
-//				uint32 old = env->seg_break;
-//				uint32 iterator = env->seg_break;
-//				allocate_user_mem(env,old,ROUNDUP(increment,PAGE_SIZE));
-//
-//				env->seg_break = new_break;
-//				return (void*)old;
-//			}
-//		}
-//		else{
-//			return (void*)-1;
-//		}
+			return NULL;
 }
 
 // FUNCTION MADE BY MORE123 && FELFEL TEAM006 2023 TO GET GET_FRAME_INFO FOR USER SIDE MALLOC

@@ -97,12 +97,12 @@ void page_fault_handler(struct Env * curenv, uint32 fault_va)
 		    int rete= allocate_frame((void*)&ptr);
 		    if(rete!=E_NO_MEM)
 		    {
-		    	cprintf("hello1\n");
+
 		          map_frame(curenv->env_page_directory, (void*)ptr ,fault_va, PERM_USER|PERM_WRITEABLE);
 		    }
 
 
-		    cprintf("hello2\n");
+
 	        int rd=pf_read_env_page(curenv, (void*)fault_va);
 
 	        if(rd==E_PAGE_NOT_EXIST_IN_PF)
@@ -116,9 +116,9 @@ void page_fault_handler(struct Env * curenv, uint32 fault_va)
 
 	            struct WorkingSetElement* rett=env_page_ws_list_create_element(curenv,fault_va);
 	            LIST_INSERT_TAIL(&(curenv->page_WS_list),rett);
-	            cprintf("hello3\n");
+
 	            if(curenv->page_WS_max_size==curenv->page_WS_list.size){
-	            	cprintf("hello4\n");
+
 	            	curenv->page_last_WS_element= curenv ->page_WS_list.lh_first;
 	            }
 	            else{

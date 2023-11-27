@@ -372,24 +372,38 @@ void fault_handler(struct Trapframe *tf)
 	}
 	else
 	{
-		 if (userTrap)
-			{
-			  //============================================================================================/
-			  //TODO: [PROJECT'23.MS2 - #13] [3] PAGE FAULT HANDLER - Check for invalid pointers
-			  //(e.g. pointing to unmarked user heap page, kernel or wrong access rights),
-			  int perm = pt_get_page_permissions(faulted_env->env_page_directory, fault_va);
+		if (userTrap)
+				{
+					 //============================================================================================/
+							  //TODO: [PROJECT'23.MS2 - #13] [3] PAGE FAULT HANDLER - Check for invalid pointers
+							  //(e.g. pointing to unmarked user heap page, kernel or wrong access rights),
+//							  int perm = pt_get_page_permissions(faulted_env->env_page_directory, fault_va);
+//
+//							   //read_only checking
+//							  if ((perm & PERM_PRESENT) && !(perm & PERM_WRITEABLE)){
+//							                sched_kill_env(faulted_env->env_id);}
+//							  //kernel checking
+//							  else if(fault_va>=USER_LIMIT){
+//							                sched_kill_env(faulted_env->env_id);}
+//							  //the unmarked places
+//							  else if((fault_va<=USER_HEAP_MAX) && (fault_va>=USER_HEAP_START) && !(perm & PERM_TEST))
+//							  {
+//							      sched_kill_env(faulted_env->env_id);
+//							  }
+			int perm = pt_get_page_permissions(faulted_env->env_page_directory, fault_va);
 
-			   //read_only checking
-			  if ((perm & PERM_PRESENT) && !(perm & PERM_WRITEABLE)){
-			                sched_kill_env(faulted_env->env_id);}
-			  //kernel checking
-			  if((perm & PERM_USER)&&(perm & PERM_PRESENT)){
-			                sched_kill_env(faulted_env->env_id);}
-			  //the unmarked places
-			  if((fault_va<USER_HEAP_MAX) && (fault_va>=curenv->limit + PAGE_SIZE) && !(perm & PERM_TEST))
-			  {
-			      sched_kill_env(faulted_env->env_id);
-			  }
+						   //read_only checking
+						  if ((perm & PERM_PRESENT) && !(perm & PERM_WRITEABLE)){
+						                sched_kill_env(faulted_env->env_id);}
+						  //kernel checking
+						  if((perm & PERM_USER)&&(perm & PERM_PRESENT)){
+						                sched_kill_env(faulted_env->env_id);}
+						  //the unmarked places
+						  if((fault_va<USER_HEAP_MAX) && (fault_va>=curenv->limit + PAGE_SIZE) && !(perm & PERM_TEST))
+						  {
+						      sched_kill_env(faulted_env->env_id);
+						  }
+				}
 			/*202 */
 
 		/*2022: Check if fault due to Access Rights */
@@ -426,5 +440,5 @@ void fault_handler(struct Trapframe *tf)
 	/*************************************************************/
 
 }
-}
+
 

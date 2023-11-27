@@ -54,72 +54,210 @@ void* sbrk(int increment)
 	 * 		or the break exceed the limit of the dynamic allocator. If sbrk fails, kernel should panic(...)
 	 */
 
+	uint32 old_break = kheap_segment_break;
+		if(increment == 0){
+			return (void *)kheap_segment_break;
+		}
+		else if(increment > 0){
+
+
+			uint32 current_break = kheap_segment_break;
+
+			if(old_break%PAGE_SIZE == 0)
+			{
+				uint32 new_break = kheap_segment_break + ROUNDUP(increment,PAGE_SIZE);
+
+				if(new_break > kheap_hard_limit){
+					panic("no extra space in dynamic allocator");
+				}
+				else{
+
+					int number_of_needed_pages = ROUNDUP(increment,PAGE_SIZE) / PAGE_SIZE;
+
+					while(number_of_needed_pages != 0){
+
+						struct FrameInfo * new_frame;
+						int alloc_ret = allocate_frame(&new_frame);
+						if(alloc_ret == E_NO_MEM){
+							panic("no extra space in dynamic allocator");
+						}
+						int map_ret = map_frame(ptr_page_directory,new_frame,current_break,PERM_WRITEABLE);
+						if(map_ret == E_NO_MEM){
+
+							free_frame(new_frame);
+							panic("no extra space in dynamic allocator");
+						}
+						new_frame->va = current_break;
+						number_of_needed_pages--;
+						current_break = current_break + PAGE_SIZE;
+					}
+
+
+					kheap_segment_break = new_break;
+					return (void *)old_break;
+				}
+			}
+			else
+			{
+				uint32 currentsegment_up =ROUNDUP(kheap_segment_break,PAGE_SIZE);
+				uint32 segment_diff = currentsegment_up -kheap_segment_break;
+				if(increment>segment_diff)
+				{
+
+					uint32 new_break =ROUNDUP((increment+kheap_segment_break),PAGE_SIZE);
+					uint32 segment_diff = currentsegment_up -new_break;
+					uint32 numofpages = segment_diff/PAGE_SIZE;
+
+					if(new_break > kheap_hard_limit){
+						panic("no extra space in dynamic allocator");
+					}
+					else{
+
+							while(numofpages > 0){
+								struct FrameInfo * new_frame;
+								allocate_frame(&new_frame);
+								map_frame(ptr_page_directory,new_frame,currentsegment_up,PERM_WRITEABLE);
+								new_frame->va = currentsegment_up;
+								numofpages--;
+								currentsegment_up = currentsegment_up + PAGE_SIZE;
+							}
+
+
+							kheap_segment_break = new_break;
+							return (void *)old_break;
+						}
+				}
+				else
+				{
+					kheap_segment_break+=increment;
+					return (void*)old_break;
+				}
+
+
+
+
+			}
+		}
+		else{
+
+			uint32 size = increment * -1;
+
+			if(kheap_segment_break%PAGE_SIZE==0)
+			{
+
+				if(size < PAGE_SIZE){
+					kheap_segment_break = kheap_segment_break - size;
+					return (void*)kheap_segment_break;
+				}
+				else{
+					uint32 newsize = ROUNDDOWN(size,PAGE_SIZE);
+					uint32 offset = size-newsize;
+					uint32 numofpages = newsize/PAGE_SIZE;
+					uint32 currentbreak = kheap_segment_break-PAGE_SIZE;
+					while(numofpages>0)
+					{
+						unmap_frame(ptr_page_directory,currentbreak);
+						numofpages--;
+						currentbreak-=PAGE_SIZE;
+					}
+					kheap_segment_break-=size;
+					return (void*)kheap_segment_break;
+				}
+			}
+			else
+			{
+				uint32 diff = kheap_segment_break - ROUNDDOWN(kheap_segment_break,PAGE_SIZE);
+				if(size>diff)
+				{
+					uint32 fregmentation = PAGE_SIZE-diff;
+					uint32 currentbreak = kheap_segment_break+fregmentation;
+					uint32 newsize = ROUNDDOWN((size + fregmentation),PAGE_SIZE);
+					uint32 numofpages = newsize/PAGE_SIZE;
+					currentbreak-=PAGE_SIZE;
+					while(numofpages>0)
+					{
+						unmap_frame(ptr_page_directory,currentbreak);
+						numofpages--;
+						currentbreak-=PAGE_SIZE;
+					}
+					kheap_segment_break-=size;
+					return (void*)kheap_segment_break;
+				}
+				else
+				{
+					kheap_segment_break-=size;
+					return (void*)kheap_segment_break;
+				}
+			}
+
+		}
+
 	//MS2: COMMENT THIS LINE BEFORE START CODING====
 //	return (void*)-1 ;
 //	panic("not implemented yet");
-	uint32 rounded_Break = 0;
-	uint32 old_Break = kheap_segment_break;
-		if (increment > 0 ){
-			if (old_Break != kheap_start){
-				rounded_Break = ROUNDUP(kheap_segment_break, PAGE_SIZE);
-			}else{
-				rounded_Break = kheap_segment_break;
-			}
-			unsigned int SIZE = ROUNDUP(increment,PAGE_SIZE);
-			kheap_segment_break += SIZE;
-			uint32 new_Limit = rounded_Break + SIZE;
-				if(new_Limit <= kheap_hard_limit){
-				for (uint32 va = rounded_Break; va<=new_Limit;va+=PAGE_SIZE){
-//					cprintf("SKAKR\t %d \n\n\n\n", va);
-					uint32 *ptr_page_table=NULL;
-					struct FrameInfo *frame=get_frame_info(ptr_page_directory,va,&ptr_page_table);
-					if(frame != NULL){
-						panic("THERE ARE NO FREE FRAMES");
-						return (void *)-1;
-					}else{
-						struct FrameInfo *ptr=NULL;
-						int ret = allocate_frame(&ptr);
-						ret = map_frame(ptr_page_directory,ptr,va,PERM_WRITEABLE);
-				}
-		}
-//				cprintf("SKAKR2 \n\n\n\n\n");
-				return (void *)old_Break;
-
-				}else{
-					panic("BREAK EXCEEDED HARD LIMIT !");
-					return (void *)-1;
-				}
-	}else if(increment == 0){
-		return (void *)kheap_segment_break;
-	}else{
-		unsigned int SIZE = increment;
-		kheap_segment_break -= SIZE;
-		if(kheap_segment_break >= kheap_start){
-			if (increment % PAGE_SIZE == 0){
-			for(uint32 va = old_Break; va >= kheap_segment_break; va-= PAGE_SIZE){
-				uint32 *ptr_page_table=NULL;
-				struct FrameInfo *frame=get_frame_info(ptr_page_directory,va,&ptr_page_table);
-				free_frame(frame);
-				unmap_frame(ptr_page_directory, va);
-			}
-			}else{
-				if (increment / PAGE_SIZE > 0){
-					for(uint32 va = old_Break; va >= kheap_segment_break; va--){
-						if(va % PAGE_SIZE == 0){
-									uint32 *ptr_page_table=NULL;
-									struct FrameInfo *frame=get_frame_info(ptr_page_directory,va,&ptr_page_table);
-									free_frame(frame);
-									unmap_frame(ptr_page_directory, va);
-								}
-					}
-				}
-			}
-			return (void *)kheap_segment_break;
-		}else{
-			panic("BREAK GOT LESS THAN KERNEL_HEAP_START !");
-			return (void *)-1;
-		}
-	}
+//	uint32 rounded_Break = 0;
+//	uint32 old_Break = kheap_segment_break;
+//		if (increment > 0 ){
+//			if (old_Break != kheap_start){
+//				rounded_Break = ROUNDUP(kheap_segment_break, PAGE_SIZE);
+//			}else{
+//				rounded_Break = kheap_segment_break;
+//			}
+//			unsigned int SIZE = ROUNDUP(increment,PAGE_SIZE);
+//			kheap_segment_break += SIZE;
+//			uint32 new_Limit = rounded_Break + SIZE;
+//				if(new_Limit <= kheap_hard_limit){
+//				for (uint32 va = rounded_Break; va<=new_Limit;va+=PAGE_SIZE){
+////					cprintf("SKAKR\t %d \n\n\n\n", va);
+//					uint32 *ptr_page_table=NULL;
+//					struct FrameInfo *frame=get_frame_info(ptr_page_directory,va,&ptr_page_table);
+//					if(frame != NULL){
+//						panic("THERE ARE NO FREE FRAMES");
+//						return (void *)-1;
+//					}else{
+//						struct FrameInfo *ptr=NULL;
+//						int ret = allocate_frame(&ptr);
+//						ret = map_frame(ptr_page_directory,ptr,va,PERM_WRITEABLE);
+//				}
+//		}
+////				cprintf("SKAKR2 \n\n\n\n\n");
+//				return (void *)old_Break;
+//
+//				}else{
+//					panic("BREAK EXCEEDED HARD LIMIT !");
+//					return (void *)-1;
+//				}
+//	}else if(increment == 0){
+//		return (void *)kheap_segment_break;
+//	}else{
+//		unsigned int SIZE = increment;
+//		kheap_segment_break -= SIZE;
+//		if(kheap_segment_break >= kheap_start){
+//			if (increment % PAGE_SIZE == 0){
+//			for(uint32 va = old_Break; va >= kheap_segment_break; va-= PAGE_SIZE){
+//				uint32 *ptr_page_table=NULL;
+//				struct FrameInfo *frame=get_frame_info(ptr_page_directory,va,&ptr_page_table);
+//				free_frame(frame);
+//				unmap_frame(ptr_page_directory, va);
+//			}
+//			}else{
+//				if (increment / PAGE_SIZE > 0){
+//					for(uint32 va = old_Break; va >= kheap_segment_break; va--){
+//						if(va % PAGE_SIZE == 0){
+//									uint32 *ptr_page_table=NULL;
+//									struct FrameInfo *frame=get_frame_info(ptr_page_directory,va,&ptr_page_table);
+//									free_frame(frame);
+//									unmap_frame(ptr_page_directory, va);
+//								}
+//					}
+//				}
+//			}
+//			return (void *)kheap_segment_break;
+//		}else{
+//			panic("BREAK GOT LESS THAN KERNEL_HEAP_START !");
+//			return (void *)-1;
+//		}
+//	}
 }
 void* kmalloc(unsigned int size)
 {

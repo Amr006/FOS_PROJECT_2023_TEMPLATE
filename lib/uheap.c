@@ -1,11 +1,15 @@
 #include <inc/lib.h>
 #include <inc/environment_definitions.h>
-#include<lib/syscall.c>
+#include<inc/dynamic_allocator.h>
+
 
 //==================================================================================//
 //============================== GIVEN FUNCTIONS ===================================//
 //==================================================================================//
-//int arr_CheckFree[3000] = {1};
+
+uint32 addSize[1024 * 1024] = {0};
+
+
 int FirstTimeFlag = 1;
 void InitializeUHeap()
 {
@@ -46,13 +50,10 @@ void* malloc(uint32 size)
 	// Write your code here, remove the panic and write your code
 	//	panic("malloc() is not implemented yet...!!");
 
-//	if (size <= DYN_ALLOC_MAX_BLOCK_SIZE){
-//		cprintf("hello\n");
-//		return alloc_block_FF(size);
-//	}
+	if (size <= DYN_ALLOC_MAX_BLOCK_SIZE){
 
-
-
+		return alloc_block_FF(size);
+	}
 		size = ROUNDUP(size,PAGE_SIZE);
 		uint32 limit = USER_HEAP_START + DYN_ALLOC_MAX_SIZE;
 		int numOfFrames=size/PAGE_SIZE;
@@ -60,22 +61,22 @@ void* malloc(uint32 size)
 		if(sys_isUHeapPlacementStrategyFIRSTFIT()){
 			int counter=0;
 			for(uint32 address=va;address<USER_HEAP_MAX;address+=PAGE_SIZE){
-			    uint32 PERM = sys_get_page_premission(address);
-				if(!(PERM & PERM_TEST)){
-					cprintf("accepted address: %u\n", address);
+				if(!(addSize[address / PAGE_SIZE])){
 					counter++;
 				}else{
 					counter=0;
 				}
 				if(counter==numOfFrames){
-					uint32 start_address = address-(numOfFrames)*PAGE_SIZE;
 					uint32 size = numOfFrames * PAGE_SIZE;
+					uint32 start_address = address-(numOfFrames - 1)*PAGE_SIZE;
+					for (uint32 address2 = start_address; address2 <= address; address2+=PAGE_SIZE){
+						addSize[address2 / PAGE_SIZE] = size;
+					}
 					sys_allocate_user_mem(start_address, size);
 					return (void*)start_address;
 				}
 			}
 		}
-    cprintf("hello\n");
 	return NULL;
 
 }
@@ -87,24 +88,19 @@ void free(void* virtual_address)
 {
 	//TODO: [PROJECT'23.MS2 - #11] [2] USER HEAP - free() [User Side]
 	// Write your code here, remove the panic and write your code
-
-//	uint32 size = 0;
-//
-//		if(((uint32)virtual_address>=USER_HEAP_START)&&((uint32)virtual_address<= USER_HEAP_START + DYN_ALLOC_MAX_SIZE)){
-//	    	free_block(virtual_address);
-//	    }
-//	    else if ((uint32)virtual_address < USER_HEAP_MAX && (uint32)virtual_address >= (USER_HEAP_START + DYN_ALLOC_MAX_SIZE + PAGE_SIZE)){
-//	    	for (uint32 va = (uint32)virtual_address ; va < USER_HEAP_MAX; va += PAGE_SIZE){
-//	    		if (sys_get_page_premission(va) == (sys_get_page_premission(va) & PERM_TEST)){
-//						size = (va - PAGE_SIZE) -(uint32)virtual_address;
-//						sys_free_user_mem(va, size);
-//						break;
-//	    		}
-//	    	}
-//
-//	   }else{
-//		   panic("kfree() painc");
-//	   }
+	uint32 size = 0;
+	uint32 hard_limit = sys_getKlimit();
+	uint32 rounded_address = (uint32)virtual_address;
+	if (rounded_address < USER_HEAP_START || rounded_address >= USER_HEAP_MAX){
+		 panic("kfree() panic");
+	}
+		else if((rounded_address>=USER_HEAP_START)&&(rounded_address < hard_limit)){
+	    	free_block(virtual_address);
+	    }
+	    else if (rounded_address < USER_HEAP_MAX && rounded_address >= (hard_limit + PAGE_SIZE)){
+	    	size = addSize[rounded_address / PAGE_SIZE];
+			sys_free_user_mem(rounded_address, size);
+	   }
 }
 
 

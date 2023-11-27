@@ -124,16 +124,18 @@ void allocate_user_mem(struct Env* e, uint32 virtual_address, uint32 size)
 //	return;
 	/*=============================================================================*/
 
-	uint32 * ptr_page_table = NULL;
-	get_page_table(e->env_page_directory, virtual_address, &ptr_page_table);
-	uint32 page_table_entry;
-	if(ptr_page_table == NULL){
-		ptr_page_table = create_page_table(e->env_page_directory, virtual_address);
-	}
-	for(uint32 va = virtual_address; va <= (virtual_address + size); va += PAGE_SIZE){
+
+
+//	uint32 page_table_entry;
+	for(uint32 va = virtual_address; va < (virtual_address + size); va += PAGE_SIZE){
+		uint32 * ptr_page_table = NULL;
 //		page_table_entry = ptr_page_table[PTX(virtual_address)]; // get the page table entry
 //		page_table_entry = page_table_entry | PERM_AVAILABLE;
-		pt_set_page_permissions(e->disk_env_pgdir, va, PERM_TEST, 0);
+		get_page_table(e->env_page_directory, va, &ptr_page_table);
+		if(ptr_page_table == NULL){
+				ptr_page_table = create_page_table(e->env_page_directory, va);
+			}
+		pt_set_page_permissions(e->env_page_directory, va, PERM_TEST, 0);
 	}
 
 	// Write your code here, remove the panic and write your code
@@ -156,10 +158,15 @@ void free_user_mem(struct Env* e, uint32 virtual_address, uint32 size)
 	//panic("free_user_mem() is not implemented yet...!!");
 
 	//TODO: [PROJECT'23.MS2 - BONUS#2] [2] USER HEAP - free_user_mem() IN O(1): removing page from WS List instead of searching the entire list
-	for (uint32 va = virtual_address; va <= (va + size); va += PAGE_SIZE){
-		pt_set_page_permissions(e->disk_env_pgdir, va, 0 , PERM_TEST);
+	for (uint32 va = virtual_address; va < (va + size); va += PAGE_SIZE){
+		pt_set_page_permissions(e->env_page_directory, va, 0 , PERM_TEST | PERM_PRESENT);
 		pf_remove_env_page(e, va);
 		env_page_ws_invalidate(e, va);
+		uint32 * ptr_page_table  = NULL;
+		struct FrameInfo *frame = get_frame_info(ptr_page_directory,va,&ptr_page_table);
+		if (frame != NULL){
+			unmap_frame(e->env_page_directory, va);
+		}
 	}
 }
 

@@ -19,7 +19,6 @@
 #include <inc/uheap.h>
 #include <inc/ubuddy.h>
 #include "dynamic_allocator.h"
-
 #define USED(x)		(void)(x)
 #define RAND(s,e)	((sys_get_virtual_time().low % (e-s) + s))
 
@@ -69,6 +68,7 @@ void* 	sys_sbrk(int increment);
 //******************
 
 //User Heap
+uint32 	sys_getKlimit();
 void 	sys_free_user_mem(uint32 virtual_address, uint32 size);
 void	sys_allocate_user_mem(uint32 virtual_address, uint32 size);
 void	sys_allocate_chunk(uint32 virtual_address, uint32 size, uint32 perms);

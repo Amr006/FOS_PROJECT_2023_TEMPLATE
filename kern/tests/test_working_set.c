@@ -118,8 +118,6 @@ int sys_check_WS_list(uint32* WS_list_content, int actual_WS_list_size, uint32 l
 	{
 		if(LIST_SIZE(&(env->page_WS_list)) != actual_WS_list_size)
 		{
-			cprintf("%d\n\n\n", env->page_WS_list);
-			cprintf("%d\n\n\n", actual_WS_list_size);
 			return WS_list_validation = 0;
 		}
 	}
