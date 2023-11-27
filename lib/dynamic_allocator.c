@@ -140,7 +140,7 @@ void *alloc_block_FF(uint32 size)
 			allocated=1;
 			element->is_free=0;
 			char * returnedAdress=(char *)element+sizeOfMetaData();
-		    return returnedAdress;
+		    return (void *)returnedAdress;
 		}
 		else if( element->is_free == 1 && (reqsize) < sizeBlock)
 		{
@@ -157,7 +157,7 @@ void *alloc_block_FF(uint32 size)
 				element->size=reqsize;
 			}
 		    char * returnedAdress=(char *)element+sizeOfMetaData();
-		    return returnedAdress;
+		    return (void *)returnedAdress;
 		}
 	}
 
@@ -173,7 +173,7 @@ void *alloc_block_FF(uint32 size)
 			metadata->size=reqsize;
 			metadata->is_free=0;
 			LIST_INSERT_TAIL(&MemoryData,metadata);
-			return(struct BlockMetaData*)(res + sizeOfMetaData());
+			return(void*)(res + sizeOfMetaData());
 		}
 	}
 

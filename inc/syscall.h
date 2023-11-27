@@ -56,7 +56,7 @@ enum
 	SYS_sbrk,
 	SYS_allocate_user_mem,
 	SYS_free_user_mem,
-//    SYS_getKlimit,
+    SYS_getKlimit,
 //	SYS_getStart,
 //	SYS_getSeg,
 //	SYS_getStartAddr,

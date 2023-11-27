@@ -17,7 +17,7 @@
 #include <kern/tests/utilities.h>
 #include <kern/tests/test_working_set.h>
 #include <inc/mmu.h>
-
+#include <kern/mem/paging_helpers.h>
 extern uint8 bypassInstrLength ;
 
 /*******************************/
@@ -509,9 +509,10 @@ void* sys_sbrk(uint32 increment)
 
 	uint32 old_Break = env->seg_break;
 			if (increment > 0 ){
-					env->seg_break += increment;
-					env->seg_break = ROUNDUP(env->seg_break, PAGE_SIZE);
-					if(env->seg_break <= env->limit)
+					env->seg_break += ROUNDUP(increment, PAGE_SIZE);
+			env->seg_break += increment;
+					allocate_user_mem(env, old_Break, increment);
+					if(env->seg_break < env->limit)
 					{
 						return (void *)old_Break;
 					}else{
@@ -522,9 +523,21 @@ void* sys_sbrk(uint32 increment)
 			return (void *)env->seg_break;
 		}else{
 			unsigned int SIZE = increment;
-			env->seg_break -= SIZE;
+			uint32 new_seg_break = env->seg_break - SIZE;
+			for (uint32 va = env->seg_break; va >= new_seg_break;va--){
+				if (va % PAGE_SIZE == 0 ){
+								uint32 perm = pt_get_page_permissions(env->env_page_directory, env->seg_break);
+								if (!(perm & PERM_AVAILABLE)){
+									pt_set_page_permissions(env->env_page_directory, env->seg_break, 0, PERM_AVAILABLE);
+								}
+								unmap_frame(env->env_page_directory, env->seg_break);
+								pf_remove_env_page(env, va);
+				}
+			}
+
+
 			if(env->seg_break >= env->start){
-				return (void *)env->seg_break;
+				return (void *)new_seg_break;
 			}else{
 				return (void *)-1;
 			}
@@ -568,11 +581,11 @@ struct FrameInfo *sys_get_frame_info(uint32 virtual_address){
 }
 
 
-//uint32 sys_getKlimit()
-//{
-//	return curenv->limit;
-//}
-//
+uint32 sys_getKlimit()
+{
+	return curenv->limit;
+}
+
 //uint32 sys_getStart()
 //{
 //	return curenv->start;
@@ -636,9 +649,9 @@ uint32 thesizeofblock=a2;
 	case SYS_get_frame_info:
 		return (uint32)(sys_get_frame_info)(a1);
 		break;
-//	case SYS_getKlimit:
-//		return (uint32)(sys_getKlimit);
-//		break;
+	case SYS_getKlimit:
+		return (uint32)(sys_getKlimit);
+		break;
 //	case SYS_getStart:
 //		return (uint32)(sys_getStart);
 //		break;
