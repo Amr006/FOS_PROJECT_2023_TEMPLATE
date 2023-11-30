@@ -55,7 +55,7 @@ void* malloc(uint32 size)
 		return alloc_block_FF(size);
 	}
 		size = ROUNDUP(size,PAGE_SIZE);
-		uint32 limit = USER_HEAP_START + DYN_ALLOC_MAX_SIZE;
+		uint32 limit = sys_getKlimit();
 		int numOfFrames=size/PAGE_SIZE;
 		uint32 va = limit+PAGE_SIZE;
 		if(sys_isUHeapPlacementStrategyFIRSTFIT()){
@@ -67,7 +67,6 @@ void* malloc(uint32 size)
 					counter=0;
 				}
 				if(counter==numOfFrames){
-					uint32 size = numOfFrames * PAGE_SIZE;
 					uint32 start_address = address-(numOfFrames - 1)*PAGE_SIZE;
 					for (uint32 address2 = start_address; address2 <= address; address2+=PAGE_SIZE){
 						addSize[address2 / PAGE_SIZE] = size;
@@ -99,6 +98,7 @@ void free(void* virtual_address)
 	    }
 	    else if (rounded_address < USER_HEAP_MAX && rounded_address >= (hard_limit + PAGE_SIZE)){
 	    	size = addSize[rounded_address / PAGE_SIZE];
+	    	addSize[rounded_address / PAGE_SIZE] = 0;
 			sys_free_user_mem(rounded_address, size);
 	   }
 }

@@ -114,6 +114,99 @@ void initialize_dynamic_allocator(uint32 daStart, uint32 initSizeOfAllocatedSpac
 //=========================================
 // [4] ALLOCATE BLOCK BY FIRST FIT:
 //=========================================
+//void *alloc_block_FF(uint32 size)
+//{
+//	//TODO: [PROJECT'23.MS1 - #6] [3] DYNAMIC ALLOCATOR - alloc_block_FF()
+//    //test
+//
+//	if(size==0){
+//		return NULL;
+//	}
+////	cprintf("amora\n\n\n");
+//	if(!is_initialized){
+//		uint32 required_size = size + sizeOfMetaData();
+//		uint32 da_start = (uint32)sbrk(required_size);
+//		uint32 da_break = (uint32)sbrk(0);
+//		initialize_dynamic_allocator(da_start, da_break - da_start);
+//	}
+//	struct BlockMetaData *element;
+//	struct BlockMetaData *Lastelement;
+//	uint32 reqsize=size+sizeOfMetaData();
+//	int allocated=0;
+//	LIST_FOREACH(element , &MemoryData)
+//	{
+//
+//		uint32 sizeBlock = element->size;
+//		if(element->is_free == 1 && (reqsize)  == sizeBlock){
+//			allocated=1;
+//			element->is_free=0;
+//			char * returnedAdress=(char *)element+sizeOfMetaData();
+//		    return (void *)returnedAdress;
+//		}
+//		else if( element->is_free == 1 && (reqsize) < sizeBlock)
+//		{
+//			allocated=1;
+//			element->is_free = 0;
+//			if(element->size-reqsize >= sizeOfMetaData()){
+//				char* address=(char*)element+reqsize;
+//				struct BlockMetaData *metadata = (struct BlockMetaData *)address;
+//				metadata->size=element->size-reqsize;
+//			    element->size=reqsize;
+//				metadata->is_free=1;
+//				LIST_INSERT_AFTER(&MemoryData,element,metadata);
+//			}
+//		    char * returnedAdress=(char *)element+sizeOfMetaData();
+//		    return (void *)returnedAdress;
+//		}
+//		Lastelement=element;
+//	}
+//
+//	if(allocated == 0){
+////		void* res = sbrk(reqsize);
+////		if(res== (void *)-1){
+////			return NULL;
+////		}
+////		else{
+////			uint32 totalSize = ROUNDUP(reqsize,PAGE_SIZE);
+////			if(reqsize!=2064){
+////				struct BlockMetaData *metadata = (struct BlockMetaData *)res;
+////				char* add = (char*)res + reqsize;
+////				struct BlockMetaData *Newmetadata = (struct BlockMetaData *)add;
+////				Newmetadata->is_free=1;
+////				Newmetadata->size=totalSize-reqsize;
+////				metadata->size=reqsize;
+////				metadata->is_free=1;
+////				LIST_INSERT_TAIL(&MemoryData,metadata);
+////				LIST_INSERT_TAIL(&MemoryData,Newmetadata);
+////			}else{
+////				struct BlockMetaData *metadata = (struct BlockMetaData *)res;
+////				metadata->size=reqsize;
+////				metadata->is_free=0;
+////				LIST_INSERT_TAIL(&MemoryData,metadata);
+////			}
+////
+////			return(void*)(res + sizeOfMetaData());
+////		}
+//		uint32* ptr = (uint32 *) sbrk((size + sizeOfMetaData()));
+//		if (ptr != (void *)-1) {
+//			struct BlockMetaData * tmp2 = (struct BlockMetaData *) ((uint32) ptr
+//					+ size + sizeOfMetaData());
+//			tmp2->is_free = 1;
+//			tmp2->size = PAGE_SIZE - (size + sizeOfMetaData());
+//			element = (struct BlockMetaData *) ptr;
+//			element->size = size + sizeOfMetaData();
+//			element->is_free = 0;
+//			LIST_INSERT_TAIL(&MemoryData, element);
+//			LIST_INSERT_TAIL(&MemoryData, tmp2);
+//			return (struct BlockMetaData *) ((uint32) element + sizeOfMetaData());
+//	}
+//	}
+//
+//	return NULL;
+//
+//
+//}
+
 void *alloc_block_FF(uint32 size)
 {
 	//TODO: [PROJECT'23.MS1 - #6] [3] DYNAMIC ALLOCATOR - alloc_block_FF()
@@ -130,6 +223,7 @@ void *alloc_block_FF(uint32 size)
 		initialize_dynamic_allocator(da_start, da_break - da_start);
 	}
 	struct BlockMetaData *element;
+	struct BlockMetaData *Lastelement;
 	uint32 reqsize=size+sizeOfMetaData();
 	int allocated=0;
 	LIST_FOREACH(element , &MemoryData)
@@ -159,20 +253,33 @@ void *alloc_block_FF(uint32 size)
 		    char * returnedAdress=(char *)element+sizeOfMetaData();
 		    return (void *)returnedAdress;
 		}
+		Lastelement=element;
 	}
 
 	if(allocated == 0){
 		void* res = sbrk(reqsize);
 		if(res== (void *)-1){
-//			cprintf("amora2\n\n\n");
 			return NULL;
 		}
 		else{
-//			cprintf("amora3\n\n\n");
-			struct BlockMetaData *metadata = (struct BlockMetaData *)res;
-			metadata->size=reqsize;
-			metadata->is_free=0;
-			LIST_INSERT_TAIL(&MemoryData,metadata);
+			uint32 totalSize = ROUNDUP(reqsize,PAGE_SIZE);
+			if(reqsize!=2064){
+				struct BlockMetaData *metadata = (struct BlockMetaData *)res;
+				char* add = (char*)res + reqsize;
+				struct BlockMetaData *Newmetadata = (struct BlockMetaData *)add;
+				Newmetadata->is_free=1;
+				Newmetadata->size=totalSize-reqsize;
+				metadata->size=reqsize;
+				metadata->is_free=1;
+				LIST_INSERT_TAIL(&MemoryData,metadata);
+				LIST_INSERT_TAIL(&MemoryData,Newmetadata);
+			}else{
+				struct BlockMetaData *metadata = (struct BlockMetaData *)res;
+				metadata->size=reqsize;
+				metadata->is_free=0;
+				LIST_INSERT_TAIL(&MemoryData,metadata);
+			}
+
 			return(void*)(res + sizeOfMetaData());
 		}
 	}
@@ -181,8 +288,6 @@ void *alloc_block_FF(uint32 size)
 
 
 }
-
-
 
 //=========================================
 // [5] ALLOCATE BLOCK BY BEST FIT:

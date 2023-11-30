@@ -54,6 +54,9 @@ void* sbrk(int increment)
 	 * 		or the break exceed the limit of the dynamic allocator. If sbrk fails, kernel should panic(...)
 	 */
 
+
+
+
 	uint32 old_break = kheap_segment_break;
 		if(increment == 0){
 			return (void *)kheap_segment_break;
@@ -191,74 +194,8 @@ void* sbrk(int increment)
 			}
 
 		}
+	}
 
-	//MS2: COMMENT THIS LINE BEFORE START CODING====
-//	return (void*)-1 ;
-//	panic("not implemented yet");
-//	uint32 rounded_Break = 0;
-//	uint32 old_Break = kheap_segment_break;
-//		if (increment > 0 ){
-//			if (old_Break != kheap_start){
-//				rounded_Break = ROUNDUP(kheap_segment_break, PAGE_SIZE);
-//			}else{
-//				rounded_Break = kheap_segment_break;
-//			}
-//			unsigned int SIZE = ROUNDUP(increment,PAGE_SIZE);
-//			kheap_segment_break += SIZE;
-//			uint32 new_Limit = rounded_Break + SIZE;
-//				if(new_Limit <= kheap_hard_limit){
-//				for (uint32 va = rounded_Break; va<=new_Limit;va+=PAGE_SIZE){
-////					cprintf("SKAKR\t %d \n\n\n\n", va);
-//					uint32 *ptr_page_table=NULL;
-//					struct FrameInfo *frame=get_frame_info(ptr_page_directory,va,&ptr_page_table);
-//					if(frame != NULL){
-//						panic("THERE ARE NO FREE FRAMES");
-//						return (void *)-1;
-//					}else{
-//						struct FrameInfo *ptr=NULL;
-//						int ret = allocate_frame(&ptr);
-//						ret = map_frame(ptr_page_directory,ptr,va,PERM_WRITEABLE);
-//				}
-//		}
-////				cprintf("SKAKR2 \n\n\n\n\n");
-//				return (void *)old_Break;
-//
-//				}else{
-//					panic("BREAK EXCEEDED HARD LIMIT !");
-//					return (void *)-1;
-//				}
-//	}else if(increment == 0){
-//		return (void *)kheap_segment_break;
-//	}else{
-//		unsigned int SIZE = increment;
-//		kheap_segment_break -= SIZE;
-//		if(kheap_segment_break >= kheap_start){
-//			if (increment % PAGE_SIZE == 0){
-//			for(uint32 va = old_Break; va >= kheap_segment_break; va-= PAGE_SIZE){
-//				uint32 *ptr_page_table=NULL;
-//				struct FrameInfo *frame=get_frame_info(ptr_page_directory,va,&ptr_page_table);
-//				free_frame(frame);
-//				unmap_frame(ptr_page_directory, va);
-//			}
-//			}else{
-//				if (increment / PAGE_SIZE > 0){
-//					for(uint32 va = old_Break; va >= kheap_segment_break; va--){
-//						if(va % PAGE_SIZE == 0){
-//									uint32 *ptr_page_table=NULL;
-//									struct FrameInfo *frame=get_frame_info(ptr_page_directory,va,&ptr_page_table);
-//									free_frame(frame);
-//									unmap_frame(ptr_page_directory, va);
-//								}
-//					}
-//				}
-//			}
-//			return (void *)kheap_segment_break;
-//		}else{
-//			panic("BREAK GOT LESS THAN KERNEL_HEAP_START !");
-//			return (void *)-1;
-//		}
-//	}
-}
 void* kmalloc(unsigned int size)
 {
 	//TODO: [PROJECT'23.MS2 - #03] [1] KERNEL HEAP - kmalloc()

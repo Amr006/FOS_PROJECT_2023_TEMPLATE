@@ -401,6 +401,7 @@ void fault_handler(struct Trapframe *tf)
 						  //the unmarked places
 						  if((fault_va<USER_HEAP_MAX) && (fault_va>=curenv->limit + PAGE_SIZE) && !(perm & PERM_TEST))
 						  {
+							  cprintf("SKAKR & EL BAIK ARE THE BEST\n\n\n");
 						      sched_kill_env(faulted_env->env_id);
 						  }
 				}
