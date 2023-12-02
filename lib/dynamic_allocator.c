@@ -117,189 +117,68 @@ void initialize_dynamic_allocator(uint32 daStart, uint32 initSizeOfAllocatedSpac
 void *alloc_block_FF(uint32 size)
 {
 	//TODO: [PROJECT'23.MS1 - #6] [3] DYNAMIC ALLOCATOR - alloc_block_FF()
-	if (!is_initialized)
-		{
+    //test
 
+	if(size==0){
+		return NULL;
+	}
+	if(!is_initialized){
 		uint32 required_size = size + sizeOfMetaData();
 		uint32 da_start = (uint32)sbrk(required_size);
-		//get new break since it's page aligned! thus, the size can be more than the required one
-		cprintf("===========================================%x\n\n",da_start);
 		uint32 da_break = (uint32)sbrk(0);
 		initialize_dynamic_allocator(da_start, da_break - da_start);
-		}
-
-	struct BlockMetaData* ElementPointer = MemoryData.lh_first;
-	struct BlockMetaData* temp;
-if(size==0)
-{
-	return NULL;
-}
-else
-{
-	while(1)
+	}
+	struct BlockMetaData *element;
+	struct BlockMetaData *Lastelement;
+	uint32 reqsize=size+sizeOfMetaData();
+	int allocated=0;
+	LIST_FOREACH(element , &MemoryData)
 	{
-		if(ElementPointer==NULL)
-		{
 
-			if(MemoryData.lh_last->is_free==1)
-			{
-
-									uint32 required_size = size +sizeOfMetaData();
-									uint32 last_meta_data_size = MemoryData.lh_last->size;
-									uint32 sbrk_increment = required_size - last_meta_data_size;
-									if(sbrk(sbrk_increment) != (void*)-1)
-									{
-										uint32 total_extra_size = ROUNDUP(sbrk_increment+last_meta_data_size,PAGE_SIZE);
-										if(required_size == total_extra_size)
-										{
-											MemoryData.lh_last->is_free = 0;
-											MemoryData.lh_last->size = total_extra_size;
-											return MemoryData.lh_last + 1;
-										}
-										else{
-
-
-
-
-											uint32 first_block_size = required_size;
-											uint32 seconed_block_size = total_extra_size - required_size;
-
-											if(seconed_block_size >= sizeOfMetaData()){
-
-												MemoryData.lh_last->is_free = 0;
-												MemoryData.lh_last->size = first_block_size;
-
-												struct BlockMetaData* first_block = MemoryData.lh_last;
-
-												uint32 seconed_block_address =  (uint32)first_block  + first_block->size;
-
-												struct BlockMetaData* seconed_block = (struct BlockMetaData *)seconed_block_address;
-
-												seconed_block->is_free = 1;
-												seconed_block->size = seconed_block_size;
-
-												LIST_INSERT_AFTER(&MemoryData, MemoryData.lh_last, seconed_block);
-
-												return first_block + 1;
-											}
-											else{
-
-												MemoryData.lh_last->is_free = 0;
-												MemoryData.lh_last->size = total_extra_size;
-												return MemoryData.lh_last + 1;
-
-
-											}
-
-										}
-
-									}else
-					return NULL;
-			}else
-			{
-
-				if(sbrk(size+sizeOfMetaData())!=(void*)-1)
-				{
-					uint32 required_size = size +sizeOfMetaData();
-					uint32 framed_size =  ROUNDUP(required_size,PAGE_SIZE);
-
-											if(framed_size == size+sizeOfMetaData()){
-
-												uint32 final_address = (uint32)MemoryData.lh_last + MemoryData.lh_last->size;
-												temp = (struct BlockMetaData *)final_address;
-												temp->size = framed_size;
-												LIST_INSERT_AFTER(&MemoryData, MemoryData.lh_last, temp);
-												temp->is_free=0;
-												return temp+1;
-											}
-											else{
-
-												uint32 first_block_size = size + sizeOfMetaData();
-												uint32 seconed_block_size = framed_size - (size + sizeOfMetaData());
-
-												if(seconed_block_size >= sizeOfMetaData()){
-
-													uint32 first_block_address = (uint32)MemoryData.lh_last + MemoryData.lh_last->size;
-													uint32 seconed_block_address = first_block_address + first_block_size;
-
-													struct BlockMetaData* first_block = (struct BlockMetaData *)first_block_address;
-													struct BlockMetaData* seconed_block = (struct BlockMetaData *)seconed_block_address;
-
-													first_block->is_free = 0;
-													first_block->size = first_block_size;
-
-													seconed_block->is_free = 1;
-													seconed_block->size = seconed_block_size;
-
-													LIST_INSERT_AFTER(&MemoryData, MemoryData.lh_last, first_block);
-													LIST_INSERT_AFTER(&MemoryData, first_block, seconed_block);
-
-
-
-													return first_block + 1;
-												}
-												else{
-
-													uint32 first_block_address = (uint32)MemoryData.lh_last + MemoryData.lh_last->size;
-
-													struct BlockMetaData* first_block = (struct BlockMetaData *)first_block_address;
-
-													first_block->is_free = 0;
-													first_block->size = framed_size;
-
-													LIST_INSERT_AFTER(&MemoryData, MemoryData.lh_last, first_block);
-
-
-													return first_block + 1;
-												}
-
-
-
-											}
-				}else{
-					return NULL;}
-			}
+		uint32 sizeBlock = element->size;
+		if(element->is_free == 1 && (reqsize)  == sizeBlock){
+			allocated=1;
+			element->is_free=0;
+			char * returnedAdress=(char *)element+sizeOfMetaData();
+		    return (void *)returnedAdress;
 		}
-		else{
-		if(ElementPointer->is_free==1)
+		else if( element->is_free == 1 && (reqsize) < sizeBlock)
 		{
-
-			if((ElementPointer->size)>size+sizeOfMetaData())
-			{
-				ElementPointer->is_free=0;
-				if((ElementPointer->size)>size+sizeOfMetaData()+sizeOfMetaData())
-				{
-					uint32 final_address =(uint32 )ElementPointer + sizeOfMetaData() + size;
-					temp=(struct BlockMetaData *)final_address;
-					LIST_INSERT_AFTER(&MemoryData, ElementPointer, temp);
-					temp->size=ElementPointer->size-size-sizeOfMetaData();
-					ElementPointer->size=size+sizeOfMetaData();
-					temp->is_free=1;
-				}
-
-
-
-				return ElementPointer+1;
-
-			}else if(ElementPointer->size==size+sizeOfMetaData())
-			{
-
-				ElementPointer->is_free=0;
-
-				return ElementPointer+1;
+			allocated=1;
+			element->is_free = 0;
+			if(element->size-reqsize > sizeOfMetaData()){
+				char* address=(char*)element+reqsize;
+				struct BlockMetaData *metadata = (struct BlockMetaData *)address;
+				metadata->size=element->size-reqsize;
+			    element->size=reqsize;
+				metadata->is_free=1;
+				LIST_INSERT_AFTER(&MemoryData,element,metadata);
 			}
-			else
-			{
-				ElementPointer=ElementPointer->prev_next_info.le_next;
-			}
-		}else
-		{
-
-			ElementPointer=ElementPointer->prev_next_info.le_next;
-		}}
+		    char * returnedAdress=(char *)element+sizeOfMetaData();
+		    return (void *)returnedAdress;
+		}
+		Lastelement=element;
 	}
 
+	if(allocated == 0){
+		uint32* ptr = (uint32 *) sbrk((size + sizeOfMetaData()));
+		if (ptr != (void *)-1) {
+			struct BlockMetaData * tmp2 = (struct BlockMetaData *) ((uint32) ptr
+					+ size + sizeOfMetaData());
+			tmp2->is_free = 1;
+			tmp2->size = PAGE_SIZE - (size + sizeOfMetaData());
+			element = (struct BlockMetaData *) ptr;
+			element->size = size + sizeOfMetaData();
+			element->is_free = 0;
+			LIST_INSERT_TAIL(&MemoryData, element);
+			LIST_INSERT_TAIL(&MemoryData, tmp2);
+			return (struct BlockMetaData *) ((uint32) element + sizeOfMetaData());
+	}
 }
+
+	return NULL;
+
+
 }
 
 
@@ -399,75 +278,53 @@ void free_block(void *va)
 	//panic("free_block is not implemented yet");
 
 	struct BlockMetaData *currmetadata=	((struct BlockMetaData *)va - 1);
-	if(currmetadata->prev_next_info.le_next==NULL&&currmetadata->prev_next_info.le_prev!=NULL){
-			struct BlockMetaData *prevmetadata=currmetadata->prev_next_info.le_prev;
+	struct BlockMetaData *prev = LIST_PREV(currmetadata);
+	struct BlockMetaData *next = LIST_NEXT(currmetadata);
+	if(next==NULL&&prev!=NULL){
+			struct BlockMetaData *prevmetadata=prev;
 			if(prevmetadata->is_free==0){
 				currmetadata->is_free=1;
-				//cprintf("test free 1 ");
 			}else{
 				prevmetadata->size+=currmetadata->size;
-				prevmetadata->prev_next_info.le_next=NULL;
 				currmetadata->size=0;
 				currmetadata->is_free= 0;
-				currmetadata->prev_next_info.le_prev=NULL;
-				//cprintf("test free 2 ");
+				LIST_REMOVE(&MemoryData,currmetadata);
 			}
-	}else if(currmetadata->prev_next_info.le_next!=NULL&&currmetadata->prev_next_info.le_prev==NULL){
-		struct BlockMetaData *nextmetadata=currmetadata->prev_next_info.le_next;
+	}else if(next!=NULL&&prev==NULL){
+		struct BlockMetaData *nextmetadata=next;
 		if(nextmetadata->is_free==0){
 			currmetadata->is_free=1;
-			//cprintf("test free 3");
 		}else{
 			currmetadata->size+=nextmetadata->size;
 			currmetadata->is_free=1;
 			nextmetadata->size=0;
 			nextmetadata->is_free=0;
-			if(nextmetadata->prev_next_info.le_next!=NULL){
-				currmetadata->prev_next_info.le_next=nextmetadata->prev_next_info.le_next;
-				nextmetadata->prev_next_info.le_next->prev_next_info.le_prev=currmetadata;
-				//cprintf("test free 4");
-			}else{
-				currmetadata->prev_next_info.le_next=NULL;
-				//cprintf("test free 5");
-			}
-			nextmetadata->prev_next_info.le_next=NULL;
-			nextmetadata->prev_next_info.le_prev=NULL;
-			//cprintf("test free 6");
+			LIST_REMOVE(&MemoryData,nextmetadata);
 		}
-	}else if(currmetadata->prev_next_info.le_next!=NULL&&currmetadata->prev_next_info.le_prev!=NULL){
-		        struct BlockMetaData *prevmetadata=currmetadata->prev_next_info.le_prev;
-				struct BlockMetaData *nextmetadata=currmetadata->prev_next_info.le_next;
+	}else if(next!=NULL&&prev!=NULL){
+		        struct BlockMetaData *prevmetadata=prev;
+				struct BlockMetaData *nextmetadata=next;
 				    if(prevmetadata->is_free==0&&nextmetadata->is_free==0){
 						currmetadata->is_free=1;
-						//cprintf("test free 7");
 					}else if(prevmetadata->is_free==1&&nextmetadata->is_free==0){
 						prevmetadata->size+=currmetadata->size;
 						currmetadata->size= 0 ;
 						currmetadata->is_free= 0;
-						prevmetadata->prev_next_info.le_next=nextmetadata;
-						nextmetadata->prev_next_info.le_prev=prevmetadata;
-						//cprintf("test free 8");
+						LIST_REMOVE(&MemoryData,currmetadata);
 					}else if(prevmetadata->is_free==0&&nextmetadata->is_free==1){
 						currmetadata->size+=nextmetadata->size;
-						currmetadata->prev_next_info.le_next=nextmetadata->prev_next_info.le_next;
-						nextmetadata->prev_next_info.le_next->prev_next_info.le_prev=currmetadata;
 						currmetadata->is_free=1;
 						nextmetadata->size= 0;
 						nextmetadata->is_free= 0;
-						//cprintf("test free 9");
+						LIST_REMOVE(&MemoryData,nextmetadata);
 					}else if(prevmetadata->is_free==1&&nextmetadata->is_free==1){
 						prevmetadata->size+=(nextmetadata->size+currmetadata->size);
-						prevmetadata->prev_next_info.le_next=nextmetadata->prev_next_info.le_next;
-						nextmetadata->prev_next_info.le_next->prev_next_info.le_prev=prevmetadata;
-						currmetadata->prev_next_info.le_next=NULL;
-						currmetadata->prev_next_info.le_prev=NULL;
-						nextmetadata->prev_next_info.le_next=NULL;
-						nextmetadata->prev_next_info.le_prev=NULL;
 						nextmetadata->size= 0 ;
 						nextmetadata->is_free= 0;
 						currmetadata->size= 0 ;
 						currmetadata->is_free= 0;
-						//cprintf("test free 10");
+						LIST_REMOVE(&MemoryData,currmetadata);
+						LIST_REMOVE(&MemoryData,nextmetadata);
 					}
 	}
 
