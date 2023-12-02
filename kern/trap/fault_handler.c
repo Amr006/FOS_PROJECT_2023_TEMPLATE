@@ -119,7 +119,7 @@ void page_fault_handler(struct Env * curenv, uint32 fault_va)
 
 	            if(curenv->page_WS_max_size==curenv->page_WS_list.size){
 
-	            	curenv->page_last_WS_element= curenv ->page_WS_list.lh_first;
+	            	curenv->page_last_WS_element = curenv->page_WS_list.lh_first;
 	            }
 	            else{
 	            	curenv-> page_last_WS_element=(void*)NULL;

@@ -90,7 +90,7 @@ void _main(void)
 	}
 
 	freeFrames = sys_calculate_free_frames() ;
-
+	cprintf("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA2\n\n\n\n");
 	//====================================================================//
 	/*Free set of blocks with different sizes (first block of each size)*/
 	cprintf("1: Free set of blocks with different sizes (first block of each size)\n\n") ;

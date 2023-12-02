@@ -158,15 +158,17 @@ void free_user_mem(struct Env* e, uint32 virtual_address, uint32 size)
 	//panic("free_user_mem() is not implemented yet...!!");
 
 	//TODO: [PROJECT'23.MS2 - BONUS#2] [2] USER HEAP - free_user_mem() IN O(1): removing page from WS List instead of searching the entire list
-	for (uint32 va = virtual_address; va < (va + size); va += PAGE_SIZE){
-		pt_set_page_permissions(e->env_page_directory, va, 0 , PERM_TEST | PERM_PRESENT);
+
+	for (uint32 va = virtual_address; va <= (virtual_address + size); va += PAGE_SIZE){
+
+		pt_set_page_permissions(e->env_page_directory, va, 0 , PERM_TEST);
 		pf_remove_env_page(e, va);
+		cprintf("BEFORE INVALIDATE:%d\n\n\n", va);
 		env_page_ws_invalidate(e, va);
+		cprintf("AFTER INVALIDATE : %d\n\n", va);
 		uint32 * ptr_page_table  = NULL;
-		struct FrameInfo *frame = get_frame_info(ptr_page_directory,va,&ptr_page_table);
-		if (frame != NULL){
-			unmap_frame(e->env_page_directory, va);
-		}
+		unmap_frame(e->env_page_directory, va);
+
 	}
 }
 

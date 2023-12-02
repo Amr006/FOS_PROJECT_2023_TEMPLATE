@@ -507,7 +507,6 @@ void* sys_sbrk(uint32 increment)
 		 * 		You might have to undo any operations you have done so far in this case.
 		 */
 
-
 		uint32 old_Break = curenv->seg_break;
 		uint32 rounded_increment = 0;
 		if (curenv->seg_break +increment >= curenv->limit){

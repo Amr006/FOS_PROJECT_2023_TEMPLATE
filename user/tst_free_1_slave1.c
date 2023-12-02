@@ -67,7 +67,7 @@ void _main(void)
 		}
 
 	}
-
+cprintf("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n\n\n\n");
 	//FREE IT
 	{
 		//Free 1st 2 MB

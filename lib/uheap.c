@@ -55,21 +55,25 @@ void* malloc(uint32 size)
 		return alloc_block_FF(size);
 	}
 		size = ROUNDUP(size,PAGE_SIZE);
-		uint32 limit = sys_getKlimit();
+		uint32 limit = myEnv->limit;
 		int numOfFrames=size/PAGE_SIZE;
 		uint32 va = limit+PAGE_SIZE;
 		if(sys_isUHeapPlacementStrategyFIRSTFIT()){
+
 			int counter=0;
 			for(uint32 address=va;address<USER_HEAP_MAX;address+=PAGE_SIZE){
-				if(!(addSize[address / PAGE_SIZE])){
+
+				if(addSize[address / PAGE_SIZE] == 0){
 					counter++;
 				}else{
 					counter=0;
 				}
+
 				if(counter==numOfFrames){
-					uint32 start_address = address-(numOfFrames - 1)*PAGE_SIZE;
+
+					uint32 start_address = address-(size - PAGE_SIZE);
 					for (uint32 address2 = start_address; address2 <= address; address2+=PAGE_SIZE){
-						addSize[address2 / PAGE_SIZE] = size;
+						addSize[address2 / PAGE_SIZE] = address;
 					}
 					sys_allocate_user_mem(start_address, size);
 					return (void*)start_address;
@@ -79,7 +83,6 @@ void* malloc(uint32 size)
 	return NULL;
 
 }
-
 //=================================
 // [3] FREE SPACE FROM USER HEAP:
 //=================================
@@ -87,18 +90,22 @@ void free(void* virtual_address)
 {
 	//TODO: [PROJECT'23.MS2 - #11] [2] USER HEAP - free() [User Side]
 	// Write your code here, remove the panic and write your code
+	cprintf("\n\n\nFREE VA: %d\n\n\n",virtual_address);
 	uint32 size = 0;
-	uint32 hard_limit = sys_getKlimit();
+	uint32 hard_limit = myEnv->limit;
 	uint32 rounded_address = (uint32)virtual_address;
 	if (rounded_address < USER_HEAP_START || rounded_address >= USER_HEAP_MAX){
 		 panic("kfree() panic");
 	}
-		else if((rounded_address>=USER_HEAP_START)&&(rounded_address < hard_limit)){
+		else if((rounded_address>=myEnv->start)&&(rounded_address < hard_limit)){
 	    	free_block(virtual_address);
 	    }
 	    else if (rounded_address < USER_HEAP_MAX && rounded_address >= (hard_limit + PAGE_SIZE)){
-	    	size = addSize[rounded_address / PAGE_SIZE];
-	    	addSize[rounded_address / PAGE_SIZE] = 0;
+	    	size = (addSize[rounded_address / PAGE_SIZE] - rounded_address);
+	    	uint32 for_condition = addSize[rounded_address / PAGE_SIZE];
+	    	for (uint32 va = rounded_address ; va <= for_condition ; va += PAGE_SIZE){
+	    		addSize[va / PAGE_SIZE] = 0;
+	    	}
 			sys_free_user_mem(rounded_address, size);
 	   }
 }
