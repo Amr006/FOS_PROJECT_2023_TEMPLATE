@@ -163,9 +163,7 @@ void free_user_mem(struct Env* e, uint32 virtual_address, uint32 size)
 
 		pt_set_page_permissions(e->env_page_directory, va, 0 , PERM_TEST);
 		pf_remove_env_page(e, va);
-		cprintf("BEFORE INVALIDATE:%d\n\n\n", va);
 		env_page_ws_invalidate(e, va);
-		cprintf("AFTER INVALIDATE : %d\n\n", va);
 		uint32 * ptr_page_table  = NULL;
 		unmap_frame(e->env_page_directory, va);
 

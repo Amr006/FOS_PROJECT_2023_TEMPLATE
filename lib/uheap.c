@@ -90,7 +90,6 @@ void free(void* virtual_address)
 {
 	//TODO: [PROJECT'23.MS2 - #11] [2] USER HEAP - free() [User Side]
 	// Write your code here, remove the panic and write your code
-	cprintf("\n\n\nFREE VA: %d\n\n\n",virtual_address);
 	uint32 size = 0;
 	uint32 hard_limit = myEnv->limit;
 	uint32 rounded_address = (uint32)virtual_address;

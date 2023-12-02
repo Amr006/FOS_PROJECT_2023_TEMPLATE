@@ -390,20 +390,17 @@ void fault_handler(struct Trapframe *tf)
 //							  {
 //							      sched_kill_env(faulted_env->env_id);
 //							  }
-			int perm = pt_get_page_permissions(faulted_env->env_page_directory, fault_va);
+			  int perm = pt_get_page_permissions(faulted_env->env_page_directory, fault_va);
 
 						   //read_only checking
 						  if ((perm & PERM_PRESENT) && !(perm & PERM_WRITEABLE)){
-							  cprintf("READ ONLY KELL KELL\n\n\n");
 						                sched_kill_env(faulted_env->env_id);}
 						  //kernel checking
-						  if((perm & PERM_USER)&&(perm & PERM_PRESENT)){
-							  cprintf("KERNEL KELL\n\n\n");
+						  else if(fault_va>=USER_LIMIT){
 						                sched_kill_env(faulted_env->env_id);}
 						  //the unmarked places
-						  if((fault_va<USER_HEAP_MAX) && (fault_va>=curenv->limit + PAGE_SIZE) && !(perm & PERM_TEST))
+						  else if((fault_va<USER_HEAP_MAX) && (fault_va>=curenv->limit + PAGE_SIZE) && !(perm & PERM_TEST))
 						  {
-							  cprintf("UNMARKED KELL\n\n\n");
 						      sched_kill_env(faulted_env->env_id);
 						  }
 				}
