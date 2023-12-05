@@ -119,12 +119,14 @@ void page_fault_handler(struct Env * curenv, uint32 fault_va)
 
 				            if(curenv->page_WS_max_size==curenv->page_WS_list.size){
 
-				            	curenv->page_last_WS_element= curenv ->page_WS_list.lh_first;
+				            	curenv->page_last_WS_element = curenv ->page_WS_list.lh_first;
 				            }
 				            else{
 				            	curenv-> page_last_WS_element=(void*)NULL;
 
 				        }
+
+//				            curenv->page_fifo_pointer->virtual_address = rett->virtual_address;
 	}
 
 	else
@@ -135,7 +137,43 @@ void page_fault_handler(struct Env * curenv, uint32 fault_va)
 		{
 			//TODO: [PROJECT'23.MS3 - #1] [1] PAGE FAULT HANDLER - FIFO Replacement
 			// Write your code here, remove the panic and write your code
-			panic("page_fault_handler() FIFO Replacement is not implemented yet...!!");
+//			panic("page_fault_handler() FIFO Replacement is not implemented yet...!!");
+
+//					struct FrameInfo *ptr=(void*)NULL;
+//
+//					int rete= allocate_frame((void*)&ptr);
+//
+//					if(rete!=E_NO_MEM)
+//					{
+//
+//						     map_frame(curenv->env_page_directory, (void*)ptr ,fault_va, PERM_USER|PERM_WRITEABLE);
+//					}
+//
+//					 if(curenv->page_WS_max_size==curenv->page_WS_list.size){
+//
+//							curenv->page_last_WS_element = curenv ->page_WS_list.lh_first;
+//					}
+//					 else{
+//							curenv-> page_last_WS_element=(void*)NULL;
+//
+//					}
+//
+//
+//					struct WorkingSetElement* element;
+//					int check = 0;
+//					LIST_FOREACH(element, &(curenv->page_WS_list)){
+//						if (element->virtual_address == fault_va){
+//							check = 1;
+//							break;
+//						}
+//					}
+//					if (!check){
+//						struct WorkingSetElement* rett_to_replace = env_page_ws_list_create_element(curenv,fault_va);
+////						LIST_REMOVE(&(curenv->page_WS_list), (curenv->page_fifo_pointer->prev_next_info.le_next));
+//						LIST_INSERT_AFTER(&(curenv->page_WS_list), (curenv->page_fifo_pointer), rett_to_replace);
+//						curenv->page_fifo_pointer->virtual_address = rett_to_replace->virtual_address;
+//					}
+
 		}
 		if(isPageReplacmentAlgorithmLRU(PG_REP_LRU_LISTS_APPROX))
 		{

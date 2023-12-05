@@ -112,6 +112,11 @@ struct Env {
 	uint32 limit;
 	uint32 seg_break;
 	// ===============
+
+	//TODO: I ADDED A FIFO POINTER TO KEEP TRACK OF THE PLACE FOR FIFO REPLACEMENT => made by more123
+	struct WorkingSetElement* page_fifo_pointer;
+
+
 	 /*
 	  * startAdd[freeCounter] = start_address ;
 						sizeAdd[freeCounter] = SIZE ;

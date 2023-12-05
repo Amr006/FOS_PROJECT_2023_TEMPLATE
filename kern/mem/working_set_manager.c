@@ -18,16 +18,14 @@ inline struct WorkingSetElement* env_page_ws_list_create_element(struct Env* e, 
 	//TODO: [PROJECT'23.MS2 - #14] [3] PAGE FAULT HANDLER - Create a new working set element
 	// Write your code here, remove the panic and write your code
 //	panic("env_page_ws_list_create_element() is not implemented yet...!!");
-	if(e->page_last_WS_element==NULL){
+
 		 struct WorkingSetElement *myws=(struct WorkingSetElement*)kmalloc(sizeof(struct WorkingSetElement));
 		 myws->virtual_address=virtual_address;
 		 return myws;
-		}
-
-		    else
-		    {
-		        panic("there is no empty place in the ws");
-		    }
+//		    else
+//		    {
+//		        panic("there is no empty place in the ws");
+//		    }
 	return NULL;
 }
 inline void env_page_ws_invalidate(struct Env* e, uint32 virtual_address)
@@ -48,6 +46,8 @@ inline void env_page_ws_invalidate(struct Env* e, uint32 virtual_address)
 					LIST_REMOVE(&(e->SecondList), ptr_tmp_WS_element);
 					LIST_INSERT_TAIL(&(e->ActiveList), ptr_tmp_WS_element);
 					pt_set_page_permissions(e->env_page_directory, ptr_tmp_WS_element->virtual_address, PERM_PRESENT, 0);
+					kfree(ptr_WS_element);
+					break;
 				}
 				found = 1;
 				break;
