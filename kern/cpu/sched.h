@@ -51,7 +51,7 @@ int scheduler_status ;
 /********* for BSD Priority Scheduler *************/
 #define PRI_MIN 0
 #define PRI_MAX 63
-float loadAvg;
+fixed_point_t loadAvg;
 int64 ticks;
 int64 timer_ticks() ;
 struct Env* fos_scheduler_BSD();

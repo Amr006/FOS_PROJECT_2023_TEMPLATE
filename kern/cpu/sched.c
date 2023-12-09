@@ -165,8 +165,15 @@ void sched_init_BSD(uint8 numOfLevels, uint8 quantum)
 	//TODO: [PROJECT'23.MS3 - #4] [2] BSD SCHEDULER - sched_init_BSD
 	//Your code is here
 	//Comment the following line
-	panic("Not implemented yet");
+//	panic("Not implemented yet");
+	num_of_ready_queues = numOfLevels ;
 
+	for(int i = 0 ; i < numOfLevels ; i++)
+	{
+		init_queue(env_ready_queues[i]);
+		quantums[i] = quantum ;
+
+	}
 	//=========================================
 	//DON'T CHANGE THESE LINES=================
 	scheduler_status = SCH_STOPPED;

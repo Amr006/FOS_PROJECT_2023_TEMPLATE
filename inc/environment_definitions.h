@@ -88,7 +88,7 @@ struct Env {
 	unsigned env_status;			// Status of the environment
 	int priority;					// Current priority
 	int nice ;
-	float recent_cpu ;
+	fixed_point_t recent_cpu ;
 	char prog_name[PROGNAMELEN];	// Program name (to print it via USER.cprintf in multitasking)
 
 	//================
