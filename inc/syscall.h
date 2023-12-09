@@ -57,6 +57,7 @@ enum
 	SYS_allocate_user_mem,
 	SYS_free_user_mem,
     SYS_getKlimit,
+	SYS_env_set_nice,
 //	SYS_getStart,
 //	SYS_getSeg,
 //	SYS_getStartAddr,

@@ -565,6 +565,13 @@ uint32 sys_getKlimit()
 	return curenv->limit;
 }
 
+void sys_env_set_nice(struct Env* e, int nice_value)
+{
+	env_set_nice(e,nice_value);
+
+}
+
+
 //uint32 sys_getStart()
 //{
 //	return curenv->start;
@@ -724,6 +731,9 @@ uint32 thesizeofblock=a2;
 		__sys_unmap_frame(a1, (void*)a2);
 		return 0;
 		break;
+	case SYS_env_set_nice:
+		sys_env_set_nice((struct Env*) a1, (int) a2);
+		break ;
 		//	case SYS_allocateChunkInPageFile:
 		//		//LOG_STATMENT(cprintf("KERNEL syscall: a2 %x\n", a2));
 		//		sys_allocate_user_mem(a1, (uint32)a2);
