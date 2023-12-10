@@ -561,7 +561,7 @@ void env_set_nice(struct Env* e, int nice_value)
 	e->nice = nice_value ;
 	if(timer_ticks()%4 == 0)
 	{
-		e->priority = PRI_MAX - (e->recent_cpu/4) - (e->nice *2) ;
+		e->priority = PRI_MAX - (fix_round(e->recent_cpu)/4) - (e->nice *2) ;
 	}
 
 
@@ -572,7 +572,7 @@ int env_get_recent_cpu(struct Env* e)
 	//Your code is here
 	//Comment the following line
 //	panic("Not implemented yet");
-	return e->recent_cpu ;
+	return fix_round(e->recent_cpu) ;
 
 }
 int get_load_average()
