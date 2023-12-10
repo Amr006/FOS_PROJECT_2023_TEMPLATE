@@ -114,7 +114,6 @@ struct Env {
 	// ===============
 
 	//TODO: I ADDED A FIFO POINTER TO KEEP TRACK OF THE PLACE FOR FIFO REPLACEMENT => made by more123
-	struct WorkingSetElement* page_fifo_pointer;
 
 
 	 /*

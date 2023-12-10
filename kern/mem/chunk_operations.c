@@ -166,7 +166,6 @@ void free_user_mem(struct Env* e, uint32 virtual_address, uint32 size)
 		env_page_ws_invalidate(e, va);
 		uint32 * ptr_page_table  = NULL;
 		unmap_frame(e->env_page_directory, va);
-
 	}
 }
 
