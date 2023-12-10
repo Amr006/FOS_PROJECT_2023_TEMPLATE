@@ -165,8 +165,16 @@ void sched_init_BSD(uint8 numOfLevels, uint8 quantum)
 	//TODO: [PROJECT'23.MS3 - #4] [2] BSD SCHEDULER - sched_init_BSD
 	//Your code is here
 	//Comment the following line
-	panic("Not implemented yet");
+//	panic("Not implemented yet");
+	num_of_ready_queues = numOfLevels ;
 
+	for(int i = 0 ; i < numOfLevels ; i++)
+	{
+		init_queue(env_ready_queues);
+		quantums[i] = quantum ;
+		env_ready_queues++ ;
+
+	}
 	//=========================================
 	//DON'T CHANGE THESE LINES=================
 	scheduler_status = SCH_STOPPED;
@@ -194,7 +202,31 @@ struct Env* fos_scheduler_BSD()
 	//TODO: [PROJECT'23.MS3 - #5] [2] BSD SCHEDULER - fos_scheduler_BSD
 	//Your code is here
 	//Comment the following line
-	panic("Not implemented yet");
+//	panic("Not implemented yet");
+	//changed from pri-man to pri-max
+    for(int i = PRI_MAX; i >= PRI_MIN; i--)
+    {
+    	if(env_ready_queues[i].size > 0)
+    	{
+    		if(env_ready_queues[i].size > 1)
+    		{
+    			int maxPri = 0;
+    			struct Env * returnEnv = NULL;
+    			for(struct Env* j = env_ready_queues[i].lh_first; j <= env_ready_queues[i].lh_last; j++)
+    			{
+    				if(j->priority > maxPri)
+    				{
+    					maxPri = j->priority;
+    					returnEnv = j;
+    				}
+    			}
+    			return returnEnv;
+    		}else
+    		{
+    			return env_ready_queues[i].lh_first;
+    		}
+    	}
+    }
 	return NULL;
 }
 

@@ -8,7 +8,7 @@
 #include <kern/mem/memory_manager.h>
 #include <kern/tests/utilities.h>
 #include <kern/cmd/command_prompt.h>
-
+#include <inc/fixed_point.h>
 //void on_clock_update_WS_time_stamps();
 extern void cleanup_buffers(struct Env* e);
 //================
@@ -547,31 +547,43 @@ int env_get_nice(struct Env* e)
 	//TODO: [PROJECT'23.MS3 - #3] [2] BSD SCHEDULER - env_get_nice
 	//Your code is here
 	//Comment the following line
-	panic("Not implemented yet");
-	return 0;
+//	panic("Not implemented yet");
+	return e->nice ;
+
 }
 void env_set_nice(struct Env* e, int nice_value)
 {
 	//TODO: [PROJECT'23.MS3 - #3] [2] BSD SCHEDULER - env_set_nice
 	//Your code is here
 	//Comment the following line
-	panic("Not implemented yet");
+//	panic("Not implemented yet");
+
+	e->nice = nice_value ;
+	if(timer_ticks()%4 == 0)
+	{
+		e->priority = PRI_MAX - (fix_round(e->recent_cpu)/4) - (e->nice *2) ;
+	}
+
+
 }
 int env_get_recent_cpu(struct Env* e)
 {
 	//TODO: [PROJECT'23.MS3 - #3] [2] BSD SCHEDULER - env_get_recent_cpu
 	//Your code is here
 	//Comment the following line
-	panic("Not implemented yet");
-	return 0;
+//	panic("Not implemented yet");
+	return fix_round(e->recent_cpu) ;
+
 }
 int get_load_average()
 {
 	//TODO: [PROJECT'23.MS3 - #3] [2] BSD SCHEDULER - get_load_average
 	//Your code is here
 	//Comment the following line
-	panic("Not implemented yet");
-	return 0;
+//	panic("Not implemented yet");
+
+	return fix_round(fix_scale(loadAvg, 100));
+
 }
 /********* for BSD Priority Scheduler *************/
 //==================================================================================//
