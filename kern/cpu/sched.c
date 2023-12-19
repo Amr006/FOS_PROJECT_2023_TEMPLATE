@@ -161,27 +161,28 @@ void sched_init_MLFQ(uint8 numOfLevels, uint8 *quantumOfEachLevel)
 //===============================
 void sched_init_BSD(uint8 numOfLevels, uint8 quantum)
 {
+
 #if USE_KHEAP
 	//TODO: [PROJECT'23.MS3 - #4] [2] BSD SCHEDULER - sched_init_BSD
 	//Your code is here
 	//Comment the following line
-//	panic("Not implemented yet");
-	num_of_ready_queues = numOfLevels ;
+	//panic("Not implemented yet");
 
-	for(int i = 0 ; i < numOfLevels ; i++)
+
+	num_of_ready_queues =numOfLevels;
+	env_ready_queues = kmalloc(sizeof(struct Env_Queue)*numOfLevels);
+	for(int i = 0 ; i <numOfLevels;i++)
 	{
-		init_queue(env_ready_queues);
-		quantums[i] = quantum ;
-		env_ready_queues++ ;
-
+		init_queue(&(env_ready_queues[i]));
 	}
-	//=========================================
+	*quantums=quantum;
 	//DON'T CHANGE THESE LINES=================
 	scheduler_status = SCH_STOPPED;
 	scheduler_method = SCH_BSD;
 	//=========================================
 	//=========================================
 #endif
+
 }
 
 
@@ -197,37 +198,49 @@ struct Env* fos_scheduler_MLFQ()
 //=========================
 // [7] BSD Scheduler:
 //=========================
-struct Env* fos_scheduler_BSD()
-{
-	//TODO: [PROJECT'23.MS3 - #5] [2] BSD SCHEDULER - fos_scheduler_BSD
-	//Your code is here
-	//Comment the following line
-//	panic("Not implemented yet");
-	//changed from pri-man to pri-max
-    for(int i = PRI_MAX; i >= PRI_MIN; i--)
-    {
-    	if(env_ready_queues[i].size > 0)
-    	{
-    		if(env_ready_queues[i].size > 1)
-    		{
-    			int maxPri = 0;
-    			struct Env * returnEnv = NULL;
-    			for(struct Env* j = env_ready_queues[i].lh_first; j <= env_ready_queues[i].lh_last; j++)
-    			{
-    				if(j->priority > maxPri)
-    				{
-    					maxPri = j->priority;
-    					returnEnv = j;
-    				}
-    			}
-    			return returnEnv;
-    		}else
-    		{
-    			return env_ready_queues[i].lh_first;
-    		}
-    	}
-    }
+struct Env* fos_scheduler_BSD() {
+	struct Env* env = NULL;
+
+	// Prioritize exiting environments if running
+	if (curenv) {
+		curenv->env_status=ENV_READY;
+		enqueue(&env_ready_queues[curenv->priority], curenv);
+		for (int level = num_of_ready_queues - 1; level >= 0; level--) {
+			  if (env_ready_queues[level].size) {
+			    env = dequeue(&env_ready_queues[level]);
+			    if (env) {
+			      // Randomly select a quantum to avoid deterministic scheduling
+			    	kclock_set_quantum (*quantums);
+			    	env->env_status=ENV_RUNNABLE;
+			    	return env;
+			    }
+			  }
+			}
+	}else{
+		sched_insert_exit(curenv);
+		for (int level = num_of_ready_queues - 1; level >= 0; level--) {
+			  if (env_ready_queues[level].size) {
+			    env = dequeue(&env_ready_queues[level]);
+			    if (env) {
+			      // Randomly select a quantum to avoid deterministic scheduling
+			    	kclock_set_quantum (*quantums);
+			    	env->env_status=ENV_RUNNABLE;
+			    	return env;
+			    }
+			  }
+			}
+	}
+
+
+	// Iterate through ready queues in reverse priority order
+
+
+	// Calculate load average with a different formula
+
+	loadAvg=fix_int(0);
+
 	return NULL;
+
 }
 
 //========================================
@@ -237,15 +250,73 @@ struct Env* fos_scheduler_BSD()
 void clock_interrupt_handler()
 {
 	//TODO: [PROJECT'23.MS3 - #5] [2] BSD SCHEDULER - Your code is here
+
 	{
+		// Calculate the total number of ready processes
+		int total_ready_processes = 0;
+		for (int i = 0; i < num_of_ready_queues; i++) {
+		    total_ready_processes += env_ready_queues[i].size;
+		}
 
+		// Calculate ticks required for one second
+		int nearest_quantum = ROUNDUP(1000, *quantums);
+		int needed_ticks = nearest_quantum / *quantums;
 
+		// Update metrics and priorities
+		{
+		    // Update load average periodically
+		    if (timer_ticks() % needed_ticks == 0) {
+		        fixed_point_t prev_load_avg = loadAvg;
+		        loadAvg = fix_add(fix_mul(fix_int(59 / 60), prev_load_avg), fix_mul(fix_int(1 / 60), fix_int(total_ready_processes)));
+		    }
+
+		    // Update recent CPU for the running process on each timer tick
+		    fixed_point_t prev_recent_cpu = curenv->recent_cpu;
+		    curenv->recent_cpu = fix_mul(fix_div(fix_mul(loadAvg, fix_int(2)), fix_add(fix_mul(loadAvg, fix_int(2)), fix_int(1))), fix_add(prev_recent_cpu, fix_int(curenv->nice)));
+
+		    // Update recent CPU for every process periodically
+		    if (timer_ticks() % needed_ticks == 0) {
+		        for (int i = 0; i < num_of_ready_queues; i++) {
+		            struct Env *iterator = env_ready_queues[i].lh_first;
+		            for (int j = 0; j < env_ready_queues[i].size; j++) {
+		                fixed_point_t prev_recent_cpu_iter = iterator->recent_cpu;
+		                iterator->recent_cpu = fix_mul(fix_div(fix_mul(loadAvg, fix_int(2)), fix_add(fix_mul(loadAvg, fix_int(2)), fix_int(1))), fix_add(prev_recent_cpu_iter, fix_int(iterator->nice)));
+		                iterator = LIST_NEXT(iterator);
+		            }
+		        }
+		    }
+
+		    // Recalculate priority periodically
+		    if (timer_ticks() % 4 == 0) {
+		        // Change priority for the running process
+		        int current_priority = fix_round(fix_sub(fix_sub(fix_int(num_of_ready_queues - 1), fix_div(curenv->recent_cpu, fix_int(4))), fix_mul(fix_int(curenv->nice), fix_int(2))));
+		        curenv->priority = (current_priority >= PRI_MIN && current_priority <= num_of_ready_queues - 1) ? current_priority : ((current_priority < PRI_MIN) ? PRI_MIN : num_of_ready_queues - 1);
+
+		        // Change priority for ready processes
+		        struct Env_Queue process_queue;
+		        init_queue(&process_queue);
+
+		        for (int i = 0; i < num_of_ready_queues; i++) {
+		            while (env_ready_queues[i].size != 0) {
+		                struct Env *returned_env = dequeue(&env_ready_queues[i]);
+		                int current_priority = fix_round(fix_sub(fix_sub(fix_int(num_of_ready_queues - 1), fix_div(returned_env->recent_cpu, fix_int(4))), fix_mul(fix_int(returned_env->nice), fix_int(2))));
+		                returned_env->priority = (current_priority >= PRI_MIN && current_priority <= num_of_ready_queues - 1) ? current_priority : ((current_priority < PRI_MIN) ? PRI_MIN : num_of_ready_queues - 1);
+		                enqueue(&process_queue, returned_env);
+		            }
+		        }
+
+		        // Enqueue processes based on updated priority
+		        while (process_queue.size != 0) {
+		            struct Env *returned_env = dequeue(&process_queue);
+		            enqueue(&env_ready_queues[returned_env->priority], returned_env);
+		        }
+		    }
+		}
 
 	}
 
-
 	/********DON'T CHANGE THIS LINE***********/
-	ticks++ ;
+	ticks++;
 	if(isPageReplacmentAlgorithmLRU(PG_REP_LRU_TIME_APPROX))
 	{
 		update_WS_time_stamps();
