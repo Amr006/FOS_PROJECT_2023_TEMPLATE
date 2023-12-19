@@ -251,69 +251,116 @@ void clock_interrupt_handler()
 {
 	//TODO: [PROJECT'23.MS3 - #5] [2] BSD SCHEDULER - Your code is here
 
-	{
-		// Calculate the total number of ready processes
-		int total_ready_processes = 0;
-		for (int i = 0; i < num_of_ready_queues; i++) {
-		    total_ready_processes += env_ready_queues[i].size;
-		}
 
-		// Calculate ticks required for one second
-		int nearest_quantum = ROUNDUP(1000, *quantums);
-		int needed_ticks = nearest_quantum / *quantums;
 
-		// Update metrics and priorities
+
+
+
+
+
 		{
-		    // Update load average periodically
-		    if (timer_ticks() % needed_ticks == 0) {
-		        fixed_point_t prev_load_avg = loadAvg;
-		        loadAvg = fix_add(fix_mul(fix_int(59 / 60), prev_load_avg), fix_mul(fix_int(1 / 60), fix_int(total_ready_processes)));
-		    }
+			// Calculate ticks required for one second
+			int nquantum =    ROUNDUP(1000, *quantums);
+			int nticks =    nquantum / *quantums;
 
-		    // Update recent CPU for the running process on each timer tick
-		    fixed_point_t prev_recent_cpu = curenv->recent_cpu;
-		    curenv->recent_cpu = fix_mul(fix_div(fix_mul(loadAvg, fix_int(2)), fix_add(fix_mul(loadAvg, fix_int(2)), fix_int(1))), fix_add(prev_recent_cpu, fix_int(curenv->nice)));
 
-		    // Update recent CPU for every process periodically
-		    if (timer_ticks() % needed_ticks == 0) {
-		        for (int i = 0; i < num_of_ready_queues; i++) {
-		            struct Env *iterator = env_ready_queues[i].lh_first;
-		            for (int j = 0; j < env_ready_queues[i].size; j++) {
-		                fixed_point_t prev_recent_cpu_iter = iterator->recent_cpu;
-		                iterator->recent_cpu = fix_mul(fix_div(fix_mul(loadAvg, fix_int(2)), fix_add(fix_mul(loadAvg, fix_int(2)), fix_int(1))), fix_add(prev_recent_cpu_iter, fix_int(iterator->nice)));
-		                iterator = LIST_NEXT(iterator);
-		            }
-		        }
-		    }
 
-		    // Recalculate priority periodically
-		    if (timer_ticks() % 4 == 0) {
-		        // Change priority for the running process
-		        int current_priority = fix_round(fix_sub(fix_sub(fix_int(num_of_ready_queues - 1), fix_div(curenv->recent_cpu, fix_int(4))), fix_mul(fix_int(curenv->nice), fix_int(2))));
-		        curenv->priority = (current_priority >= PRI_MIN && current_priority <= num_of_ready_queues - 1) ? current_priority : ((current_priority < PRI_MIN) ? PRI_MIN : num_of_ready_queues - 1);
 
-		        // Change priority for ready processes
-		        struct Env_Queue process_queue;
-		        init_queue(&process_queue);
 
-		        for (int i = 0; i < num_of_ready_queues; i++) {
-		            while (env_ready_queues[i].size != 0) {
-		                struct Env *returned_env = dequeue(&env_ready_queues[i]);
-		                int current_priority = fix_round(fix_sub(fix_sub(fix_int(num_of_ready_queues - 1), fix_div(returned_env->recent_cpu, fix_int(4))), fix_mul(fix_int(returned_env->nice), fix_int(2))));
-		                returned_env->priority = (current_priority >= PRI_MIN && current_priority <= num_of_ready_queues - 1) ? current_priority : ((current_priority < PRI_MIN) ? PRI_MIN : num_of_ready_queues - 1);
-		                enqueue(&process_queue, returned_env);
-		            }
-		        }
+			// Calculate the total number of ready processes
+			int total_ready_processes = 0;
+			for (int i = 0; i < num_of_ready_queues; i++) {
+			    total_ready_processes += env_ready_queues[i].size;
+			}
 
-		        // Enqueue processes based on updated priority
-		        while (process_queue.size != 0) {
-		            struct Env *returned_env = dequeue(&process_queue);
-		            enqueue(&env_ready_queues[returned_env->priority], returned_env);
-		        }
-		    }
+
+
+
+
+
+
+
+
+
+			// Update load average periodically
+			if (timer_ticks() % nticks == 0) {
+			    fixed_point_t prev_load_avg = loadAvg;
+			    loadAvg = fix_add(fix_mul(fix_int(59 / 60), prev_load_avg), fix_mul(fix_int(1 / 60), fix_int(total_ready_processes)));
+			}
+
+
+
+
+
+
+
+			// Update recent CPU for the running process on each timer tick
+			fixed_point_t prev_recent_cpu =            curenv->recent_cpu;
+			curenv->recent_cpu =        fix_mul(fix_div(fix_mul(loadAvg, fix_int(2)), fix_add(fix_mul(loadAvg, fix_int(2)), fix_int(1))), fix_add(prev_recent_cpu, fix_int(curenv->nice)));
+
+
+
+
+
+
+
+			// Update recent CPU for every process periodically
+			if (timer_ticks() % nticks == 0) {
+			    for (int i = 0; i < num_of_ready_queues; i++) {
+			        struct Env *iterator = env_ready_queues[i].lh_first;
+			        for (int j = 0; j < env_ready_queues[i].size; j++) {
+			            fixed_point_t prev_recent_cpu_iter = iterator->recent_cpu;
+			            iterator->recent_cpu = fix_mul(fix_div(fix_mul(loadAvg, fix_int(2)), fix_add(fix_mul(loadAvg, fix_int(2)), fix_int(1))), fix_add(prev_recent_cpu_iter, fix_int(iterator->nice)));
+			            iterator = LIST_NEXT(iterator);
+			        }
+			    }
+			}
+
+
+
+
+
+
+
+
+			// Recalculate priority periodically
+			if (timer_ticks() % 4 == 0) {
+			    // Change priority for the running process
+			    int current_priority =        fix_round(fix_sub(fix_sub(fix_int(num_of_ready_queues - 1), fix_div(curenv->recent_cpu, fix_int(4))), fix_mul(fix_int(curenv->nice), fix_int(2))));
+			    curenv->priority =        (current_priority >= PRI_MIN && current_priority <= num_of_ready_queues - 1) ? current_priority : ((current_priority < PRI_MIN) ? PRI_MIN : num_of_ready_queues - 1);
+
+			    // Change priority for ready processes
+			    struct Env_Queue process_queue;
+			    init_queue(&process_queue);
+
+			    for (int i = 0; i < num_of_ready_queues; i++) {
+			        while (env_ready_queues[i].size != 0) {
+			            struct Env *returned_env = dequeue(&env_ready_queues[i]);
+			            int current_priority = fix_round(fix_sub(fix_sub(fix_int(num_of_ready_queues - 1), fix_div(returned_env->recent_cpu, fix_int(4))), fix_mul(fix_int(returned_env->nice), fix_int(2))));
+			            returned_env->priority = (current_priority >= PRI_MIN && current_priority <= num_of_ready_queues - 1) ? current_priority : ((current_priority < PRI_MIN) ? PRI_MIN : num_of_ready_queues - 1);
+			            enqueue(&process_queue, returned_env);
+			        }
+			    }
+
+
+
+
+
+
+
+
+
+			    // Enqueue processes based on updated priority
+			    while (process_queue.size != 0) {
+			        struct Env *returned_env =                       dequeue(&process_queue);
+			        enqueue(&env_ready_queues[returned_env->priority],        returned_env);
+			    }
+			}
+
+
 		}
 
-	}
+
 
 	/********DON'T CHANGE THIS LINE***********/
 	ticks++;
