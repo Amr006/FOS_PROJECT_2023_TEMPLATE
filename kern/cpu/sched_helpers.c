@@ -558,11 +558,22 @@ void env_set_nice(struct Env* e, int nice_value)
 	//Comment the following line
 //	panic("Not implemented yet");
 
-	e->nice = nice_value ;
-	if(timer_ticks()%4 == 0)
-	{
-		e->priority = PRI_MAX - (fix_round(e->recent_cpu)/4) - (e->nice *2) ;
-	}
+	 e->nice = nice_value ;
+		    if(e->env_status != ENV_NEW)
+		    {
+		    	        int rc = fix_round(e->recent_cpu);
+		    			e->priority = PRI_MAX - rc - (e->nice *2) ;
+		    			fixed_point_t f = fix_int(e->priority);
+		    			e->priority = fix_trunc(f);
+		    			if(e->priority > PRI_MAX)
+		    			{
+		    				e->priority = PRI_MAX;
+		    			}else if (e->priority < PRI_MIN)
+		    			{
+		    				e->priority = PRI_MIN;
+		    			}
+
+		    }
 
 
 }
