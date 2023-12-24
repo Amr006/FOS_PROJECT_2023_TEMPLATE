@@ -201,46 +201,45 @@ struct Env* fos_scheduler_MLFQ()
 struct Env* fos_scheduler_BSD() {
 	struct Env* env = NULL;
 
-	// Prioritize exiting environments if running
-	if (curenv) {
-		curenv->env_status=ENV_READY;
-		enqueue(&env_ready_queues[curenv->priority], curenv);
-		for (int level = num_of_ready_queues - 1; level >= 0; level--) {
-			  if (env_ready_queues[level].size) {
-			    env = dequeue(&env_ready_queues[level]);
-			    if (env) {
-			      // Randomly select a quantum to avoid deterministic scheduling
-			    	kclock_set_quantum (*quantums);
-			    	env->env_status=ENV_RUNNABLE;
-			    	return env;
-			    }
-			  }
-			}
-	}else{
-		sched_insert_exit(curenv);
-		for (int level = num_of_ready_queues - 1; level >= 0; level--) {
-			  if (env_ready_queues[level].size) {
-			    env = dequeue(&env_ready_queues[level]);
-			    if (env) {
-			      // Randomly select a quantum to avoid deterministic scheduling
-			    	kclock_set_quantum (*quantums);
-			    	env->env_status=ENV_RUNNABLE;
-			    	return env;
-			    }
-			  }
-			}
-	}
+		// Prioritize exiting environments if running
+		if (curenv) {
+			curenv->env_status=ENV_READY;
+			enqueue(&env_ready_queues[curenv->priority], curenv);
+			for (int level = num_of_ready_queues - 1; level >= 0; level--) {
+				  if (env_ready_queues[level].size) {
+				    env = dequeue(&env_ready_queues[level]);
+				    if (env) {
+				      // Randomly select a quantum to avoid deterministic scheduling
+				    	kclock_set_quantum (*quantums);
+				    	env->env_status=ENV_RUNNABLE;
+				    	return env;
+				    }
+				  }
+				}
+		}else{
+			sched_insert_exit(curenv);
+			for (int level = num_of_ready_queues - 1; level >= 0; level--) {
+				  if (env_ready_queues[level].size) {
+				    env = dequeue(&env_ready_queues[level]);
+				    if (env) {
+				      // Randomly select a quantum to avoid deterministic scheduling
+				    	kclock_set_quantum (*quantums);
+				    	env->env_status=ENV_RUNNABLE;
+				    	return env;
+				    }
+				  }
+				}
+		}
 
 
-	// Iterate through ready queues in reverse priority order
+		// Iterate through ready queues in reverse priority order
 
 
-	// Calculate load average with a different formula
+		// Calculate load average with a different formula
 
-	loadAvg=fix_int(0);
+		loadAvg=fix_int(0);
 
-	return NULL;
-
+		return NULL;
 }
 
 //========================================
@@ -249,128 +248,107 @@ struct Env* fos_scheduler_BSD() {
 //========================================
 void clock_interrupt_handler()
 {
-	//TODO: [PROJECT'23.MS3 - #5] [2] BSD SCHEDULER - Your code is here
 
+	int quantumRounder = ROUNDUP(1000, *quantums);
+	int noTicks = quantumRounder / *quantums;
 
+	int noProcesses = (curenv != NULL) ? 1 : 0;
 
-
-
-
-
-
-		{
-			// Calculate ticks required for one second
-			int nquantum =    ROUNDUP(1000, *quantums);
-			int nticks =    nquantum / *quantums;
-
-
-
-
-
-			// Calculate the total number of ready processes
-			int total_ready_processes = 0;
-			for (int i = 0; i < num_of_ready_queues; i++) {
-			    total_ready_processes += env_ready_queues[i].size;
-			}
-
-
-
-
-
-
-
-
-
-
-			// Update load average periodically
-			if (timer_ticks() % nticks == 0) {
-			    fixed_point_t prev_load_avg = loadAvg;
-			    loadAvg = fix_add(fix_mul(fix_int(59 / 60), prev_load_avg), fix_mul(fix_int(1 / 60), fix_int(total_ready_processes)));
-			}
-
-
-
-
-
-
-
-			// Update recent CPU for the running process on each timer tick
-			fixed_point_t prev_recent_cpu =            curenv->recent_cpu;
-			curenv->recent_cpu =        fix_mul(fix_div(fix_mul(loadAvg, fix_int(2)), fix_add(fix_mul(loadAvg, fix_int(2)), fix_int(1))), fix_add(prev_recent_cpu, fix_int(curenv->nice)));
-
-
-
-
-
-
-
-			// Update recent CPU for every process periodically
-			if (timer_ticks() % nticks == 0) {
-			    for (int i = 0; i < num_of_ready_queues; i++) {
-			        struct Env *iterator = env_ready_queues[i].lh_first;
-			        for (int j = 0; j < env_ready_queues[i].size; j++) {
-			            fixed_point_t prev_recent_cpu_iter = iterator->recent_cpu;
-			            iterator->recent_cpu = fix_mul(fix_div(fix_mul(loadAvg, fix_int(2)), fix_add(fix_mul(loadAvg, fix_int(2)), fix_int(1))), fix_add(prev_recent_cpu_iter, fix_int(iterator->nice)));
-			            iterator = LIST_NEXT(iterator);
-			        }
-			    }
-			}
-
-
-
-
-
-
-
-
-			// Recalculate priority periodically
-			if (timer_ticks() % 4 == 0) {
-			    // Change priority for the running process
-			    int current_priority =        fix_round(fix_sub(fix_sub(fix_int(num_of_ready_queues - 1), fix_div(curenv->recent_cpu, fix_int(4))), fix_mul(fix_int(curenv->nice), fix_int(2))));
-			    curenv->priority =        (current_priority >= PRI_MIN && current_priority <= num_of_ready_queues - 1) ? current_priority : ((current_priority < PRI_MIN) ? PRI_MIN : num_of_ready_queues - 1);
-
-			    // Change priority for ready processes
-			    struct Env_Queue process_queue;
-			    init_queue(&process_queue);
-
-			    for (int i = 0; i < num_of_ready_queues; i++) {
-			        while (env_ready_queues[i].size != 0) {
-			            struct Env *returned_env = dequeue(&env_ready_queues[i]);
-			            int current_priority = fix_round(fix_sub(fix_sub(fix_int(num_of_ready_queues - 1), fix_div(returned_env->recent_cpu, fix_int(4))), fix_mul(fix_int(returned_env->nice), fix_int(2))));
-			            returned_env->priority = (current_priority >= PRI_MIN && current_priority <= num_of_ready_queues - 1) ? current_priority : ((current_priority < PRI_MIN) ? PRI_MIN : num_of_ready_queues - 1);
-			            enqueue(&process_queue, returned_env);
-			        }
-			    }
-
-
-
-
-
-
-
-
-
-			    // Enqueue processes based on updated priority
-			    while (process_queue.size != 0) {
-			        struct Env *returned_env =                       dequeue(&process_queue);
-			        enqueue(&env_ready_queues[returned_env->priority],        returned_env);
-			    }
-			}
-
-
-		}
-
-
-
-	/********DON'T CHANGE THIS LINE***********/
-	ticks++;
-	if(isPageReplacmentAlgorithmLRU(PG_REP_LRU_TIME_APPROX))
-	{
-		update_WS_time_stamps();
+	for (int i = 0; i < num_of_ready_queues; i++) {
+	    noProcesses += env_ready_queues[i].size;
 	}
-	//cprintf("Clock Handler\n") ;
-	fos_scheduler();
-	/*****************************************/
+
+	if (timer_ticks() % noTicks == 0) {
+	    fixed_point_t prev_load_average = loadAvg;
+	    loadAvg = fix_add(fix_mul(fix_int(59 / 60), prev_load_average),
+	                       fix_mul(fix_int(1 / 60), fix_int(noProcesses)));
+	}
+
+	if (curenv != NULL) {
+	    curenv->recent_cpu = fix_add(curenv->recent_cpu, fix_int(1));
+	}
+
+	if (timer_ticks() % noTicks == 0) {
+	    fixed_point_t prev_recent_cpu = curenv->recent_cpu;
+	    fixed_point_t t1_1 = fix_scale(loadAvg, 2);
+	    fixed_point_t t1_2 = fix_add(t1_1, fix_int(1));
+	    fixed_point_t t1 = fix_div(t1_1, t1_2);
+	    fixed_point_t t2 = fix_mul(t1, prev_recent_cpu);
+	    fixed_point_t t3 = fix_int(curenv->nice);
+	    fixed_point_t recent = fix_add(t2, t3);
+	    curenv->recent_cpu = recent;
+
+	    for (int i = 0; i < num_of_ready_queues; i++) {
+	        struct Env *ptr = env_ready_queues[i].lh_first;
+	        for (int j = 0; j < env_ready_queues[i].size; j++) {
+	            fixed_point_t prev_recent_cpu = ptr->recent_cpu;
+	            fixed_point_t t1_1 = fix_scale(loadAvg, 2);
+	            fixed_point_t t1_2 = fix_add(t1_1, fix_int(1));
+	            fixed_point_t t1 = fix_div(t1_1, t1_2);
+	            fixed_point_t t2 = fix_mul(t1, prev_recent_cpu);
+	            fixed_point_t t3 = fix_int(ptr->nice);
+	            fixed_point_t recent = fix_add(t2, t3);
+	            ptr->recent_cpu = recent;
+	            ptr = LIST_NEXT(ptr);
+	        }
+	    }
+	}
+
+
+	if (timer_ticks() % 4 == 0) {
+	    fixed_point_t p1 = fix_int(num_of_ready_queues - 1);
+	    fixed_point_t p2 = fix_div(curenv->recent_cpu, fix_int(4));
+	    fixed_point_t p3 = fix_mul(fix_int(curenv->nice), fix_int(2));
+	    fixed_point_t sub1 = fix_sub(p1, p2);
+	    fixed_point_t sub2 = fix_sub(sub1, p3);
+	    int res = fix_trunc(sub2);
+	    int runEnv = res;
+	    curenv->priority = runEnv;
+	     if (runEnv < PRI_MIN) {
+	        curenv->priority = PRI_MIN;
+	    } else if (runEnv > num_of_ready_queues-1){
+	        curenv->priority = num_of_ready_queues - 1;
+	    }
+
+	    struct Env_Queue proccess_queue;
+	    init_queue(&proccess_queue);
+
+	    for (int i = 0; i < num_of_ready_queues; i++) {
+	        while (env_ready_queues[i].size != 0) {
+	            struct Env *EnvNewQueue = dequeue(&env_ready_queues[i]);
+	            fixed_point_t p1 = fix_int(num_of_ready_queues - 1);
+	            fixed_point_t p2 = fix_div(EnvNewQueue->recent_cpu, fix_int(4));
+	            fixed_point_t p3 = fix_mul(fix_int(EnvNewQueue->nice), fix_int(2));
+	            fixed_point_t sub1 = fix_sub(p1, p2);
+	            fixed_point_t sub2 = fix_sub(sub1, p3);
+	            int res = fix_trunc(sub2);
+	            int runEnv = res;
+	            EnvNewQueue->priority = runEnv;
+	            if (runEnv < PRI_MIN) {
+	                EnvNewQueue->priority = PRI_MIN;
+	            } else if ((runEnv > num_of_ready_queues - 1)){
+
+	                EnvNewQueue->priority = num_of_ready_queues - 1;
+	            }
+	            enqueue(&proccess_queue, EnvNewQueue);
+	        }
+	    }
+
+	    while (proccess_queue.size != 0) {
+	        struct Env *EnvNewQueue = dequeue(&proccess_queue);
+	        enqueue(&env_ready_queues[EnvNewQueue->priority], EnvNewQueue);
+	    }
+	}
+
+		/********DON'T CHANGE THIS LINE***********/
+		ticks++;
+		if(isPageReplacmentAlgorithmLRU(PG_REP_LRU_TIME_APPROX))
+		{
+			update_WS_time_stamps();
+		}
+		//cprintf("Clock Handler\n") ;
+		fos_scheduler();
+		/*****************************************/
 }
 
 //===================================================================
@@ -437,3 +415,4 @@ void update_WS_time_stamps()
 		}
 	}
 }
+

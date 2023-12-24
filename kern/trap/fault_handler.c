@@ -200,11 +200,11 @@ void page_fault_handler(struct Env * curenv, uint32 fault_va)
 			      {
 			          flagg=1;
 					  LIST_REMOVE( & (curenv -> SecondList), elementt); //remove tail of the secondlist
-					  LIST_INSERT_HEAD( & (curenv -> ActiveList), elementt);
-					  pt_set_page_permissions(curenv -> env_page_directory, elementt->virtual_address, PERM_PRESENT, 0);
 					  struct WorkingSetElement * var=curenv->ActiveList.lh_last;
 					  LIST_REMOVE(&(curenv -> ActiveList), var);
 					  LIST_INSERT_HEAD( &(curenv -> SecondList), var);
+					  LIST_INSERT_HEAD( & (curenv -> ActiveList), elementt);
+					  pt_set_page_permissions(curenv -> env_page_directory, elementt->virtual_address, PERM_PRESENT, 0);
 					  pt_set_page_permissions(curenv -> env_page_directory, var->virtual_address, 0, PERM_PRESENT);
 					  break;
 
@@ -220,7 +220,7 @@ void page_fault_handler(struct Env * curenv, uint32 fault_va)
 				  int rd = pf_read_env_page(curenv, (void *) fault_va);
 				  if (rd == E_PAGE_NOT_EXIST_IN_PF) {
 					if (!((fault_va >= USTACKBOTTOM) && (fault_va < USTACKTOP)) && !((fault_va >= USER_HEAP_START) && (fault_va < USER_HEAP_MAX))) {
-					  sched_kill_env(curenv -> env_id);
+						sched_kill_env(curenv -> env_id);
 					}
 				  }
 

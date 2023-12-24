@@ -289,6 +289,7 @@ void free_block(void *va)
 				currmetadata->size=0;
 				currmetadata->is_free= 0;
 				LIST_REMOVE(&MemoryData,currmetadata);
+				currmetadata = 0;
 			}
 	}else if(next!=NULL&&prev==NULL){
 		struct BlockMetaData *nextmetadata=next;
@@ -300,6 +301,7 @@ void free_block(void *va)
 			nextmetadata->size=0;
 			nextmetadata->is_free=0;
 			LIST_REMOVE(&MemoryData,nextmetadata);
+			nextmetadata = 0;
 		}
 	}else if(next!=NULL&&prev!=NULL){
 		        struct BlockMetaData *prevmetadata=prev;
@@ -311,12 +313,14 @@ void free_block(void *va)
 						currmetadata->size= 0 ;
 						currmetadata->is_free= 0;
 						LIST_REMOVE(&MemoryData,currmetadata);
+						currmetadata = 0;
 					}else if(prevmetadata->is_free==0&&nextmetadata->is_free==1){
 						currmetadata->size+=nextmetadata->size;
 						currmetadata->is_free=1;
 						nextmetadata->size= 0;
 						nextmetadata->is_free= 0;
 						LIST_REMOVE(&MemoryData,nextmetadata);
+						nextmetadata = 0;
 					}else if(prevmetadata->is_free==1&&nextmetadata->is_free==1){
 						prevmetadata->size+=(nextmetadata->size+currmetadata->size);
 						nextmetadata->size= 0 ;
@@ -325,6 +329,7 @@ void free_block(void *va)
 						currmetadata->is_free= 0;
 						LIST_REMOVE(&MemoryData,currmetadata);
 						LIST_REMOVE(&MemoryData,nextmetadata);
+						currmetadata = 0, nextmetadata = 0;
 					}
 	}
 

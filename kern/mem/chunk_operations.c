@@ -165,7 +165,9 @@ void free_user_mem(struct Env* e, uint32 virtual_address, uint32 size)
 		pf_remove_env_page(e, va);
 		env_page_ws_invalidate(e, va);
 		uint32 * ptr_page_table  = NULL;
+		if (isPageReplacmentAlgorithmFIFO()){
 		unmap_frame(e->env_page_directory, va);
+		}
 	}
 }
 

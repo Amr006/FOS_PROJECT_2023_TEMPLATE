@@ -9,7 +9,6 @@
 inline struct WorkingSetElement* env_page_ws_list_create_element(struct Env* e, uint32 virtual_address)
 {
 	//TODO: [PROJECT'23.MS2 - #14] [3] PAGE FAULT HANDLER - Create a new working set element
-
 		uint32 the_size_of_the_struct = sizeof(struct WorkingSetElement);
 	    struct WorkingSetElement *ptr= (struct WorkingSetElement*)kmalloc(the_size_of_the_struct);
 	    ptr->virtual_address = virtual_address;

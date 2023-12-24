@@ -208,10 +208,11 @@ void* kmalloc(unsigned int size)
 
 	//cprintf("the size is %d and the SIZE is %d",size,SIZE);
 	if(size <= DYN_ALLOC_MAX_BLOCK_SIZE){
-		return (void*)alloc_block_FF(size);
-	}
 
-	unsigned int SIZE = ROUNDUP(size,PAGE_SIZE);
+		return (void*)alloc_block_FF(size);
+	}else {
+
+	int SIZE = ROUNDUP(size,PAGE_SIZE);
 	int numOfFrames=SIZE/PAGE_SIZE;
 	uint32 va= kheap_hard_limit+PAGE_SIZE;
 	if(isKHeapPlacementStrategyFIRSTFIT()){
@@ -239,7 +240,7 @@ void* kmalloc(unsigned int size)
 			}
 		}
 	}
-
+	}
 
 	return NULL;
 }
@@ -270,6 +271,7 @@ void kfree(void* virtual_address)
 
 unsigned int kheap_virtual_address(unsigned int physical_address)
 {
+
 	//TODO: [PROJECT'23.MS2 - #05] [1] KERNEL HEAP - kheap_virtual_address()
 	//refer to the project presentation and documentation for details
 	// Write your code here, remove the panic and write your code
@@ -297,6 +299,7 @@ unsigned int kheap_virtual_address(unsigned int physical_address)
 
 unsigned int kheap_physical_address(unsigned int virtual_address)
 {
+
 	//TODO: [PROJECT'23.MS2 - #06] [1] KERNEL HEAP - kheap_physical_address()
 	//refer to the project presentation and documentation for details
 	// Write your code here, remove the panic and write your code
